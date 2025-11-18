@@ -36,3 +36,30 @@ function initThreeJSModel() {
 // כפתור שלח
 document.getElementById('send-text').addEventListener('click', () => {
   const text = document.getElementById('text-input').value;
+  if(text.trim() !== "") {
+    console.log("User wrote:", text);
+    document.getElementById('text-input').value = "";
+    alert("הטקסט נשלח לאמא (placeholder)");
+  }
+});
+
+// הקלטת קול
+document.getElementById('record-voice').addEventListener('click', async () => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mediaRecorder = new MediaRecorder(stream);
+    let chunks = [];
+    mediaRecorder.ondataavailable = e => chunks.push(e.data);
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(chunks, { type: 'audio/webm' });
+      console.log("Voice recorded:", blob);
+      alert("הקלטה הושלמה (placeholder)");
+    };
+    mediaRecorder.start();
+    setTimeout(() => mediaRecorder.stop(), 5000);
+    alert("הקלטה התחילה - תסתיים אוטומטית לאחר 5 שניות");
+  } catch (err) {
+    console.error("Mic error:", err);
+    alert("לא ניתן לגשת למיקרופון");
+  }
+});
