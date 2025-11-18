@@ -99,7 +99,7 @@
 
     // -------------------- טעינת מודל GLB --------------------
     var loader = new THREE.GLTFLoader();
-    var modelURL = 'assets/model.glb';
+    var modelURL = 'https://models.readyplayer.me/691c99165f9f523e5064e8f5.glb';
     var animateMixers = [];
     var avatarModel;
 
@@ -121,7 +121,7 @@
             animateMixers.push(mixer);
           }
 
-          showUIButtons(); // הכפתורים מופיעים רק אחרי טעינת דמות
+          showUIButtons(); // כפתורים מופיעים רק אחרי טעינת דמות
         },
         undefined,
         function (error) { console.error('Error loading GLB:', error); }
