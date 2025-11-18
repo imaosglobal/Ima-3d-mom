@@ -30,19 +30,20 @@ scene.add(dirLight);
 const loader = new GLTFLoader();
 const modelURL = 'https://imaosglobal.github.io/Ima-3d-mom/assets/model.glb';
 let animateMixers = [];
+let avatarModel;
 
 function loadAvatar() {
   loader.load(
     modelURL,
     function (gltf) {
-      const model = gltf.scene;
-      model.position.set(0, 0, 0);
-      model.scale.set(1.2, 1.2, 1.2);
-      model.rotation.y = Math.PI;
-      scene.add(model);
+      avatarModel = gltf.scene;
+      avatarModel.position.set(0, 0, 0);
+      avatarModel.scale.set(1.2, 1.2, 1.2);
+      avatarModel.rotation.y = Math.PI;
+      scene.add(avatarModel);
 
       if (gltf.animations && gltf.animations.length > 0) {
-        const mixer = new THREE.AnimationMixer(model);
+        const mixer = new THREE.AnimationMixer(avatarModel);
         gltf.animations.forEach((clip) => mixer.clipAction(clip).play());
         animateMixers.push(mixer);
       }
@@ -88,12 +89,7 @@ function decodeJwtResponse(token) {
 // -------------------- כפתורי UI --------------------
 function showUIButtons() {
   const btnContainer = document.createElement('div');
-  btnContainer.style.position = 'absolute';
-  btnContainer.style.bottom = '20px';
-  btnContainer.style.left = '50%';
-  btnContainer.style.transform = 'translateX(-50%)';
-  btnContainer.style.display = 'flex';
-  btnContainer.style.gap = '10px';
+  btnContainer.className = 'button-container';
   document.body.appendChild(btnContainer);
 
   const sendBtn = document.createElement('button');
@@ -109,11 +105,20 @@ function showUIButtons() {
 
 // -------------------- רינדור ואנימציה --------------------
 const clock = new THREE.Clock();
+let rotateAngle = 0;
 
 function animate() {
   requestAnimationFrame(animate);
   const delta = clock.getDelta();
   animateMixers.forEach((mixer) => mixer.update(delta));
+
+  // --- אנימציה קלה לדמות (סיבוב והטיית ראש) ---
+  if (avatarModel) {
+    rotateAngle += 0.002;
+    avatarModel.rotation.y = Math.PI + Math.sin(rotateAngle) * 0.05;
+    avatarModel.position.y = 0.02 * Math.sin(rotateAngle * 2);
+  }
+
   renderer.render(scene, camera);
 }
 animate();
