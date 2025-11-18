@@ -4,27 +4,29 @@ let mixer, clock, modelScene, actions = [], blinkAction;
 function handleCredentialResponse(response) {
   const data = parseJwt(response.credential);
 
-  // קביעת שם מותאם לשפה
+  // שם מותאם לשפה
   let userLang = navigator.language || "he";
   let imaName = userLang.startsWith("he") ? "אמא" : "Ima";
   document.querySelector('.welcome-text').textContent = `ברוכים הבאים ל-${imaName}`;
 
-  // הצגת מסך ראשי
+  // הסתרת מסך כניסה
   document.getElementById('landing-page').classList.add('hidden');
   document.getElementById('main-page').classList.remove('hidden');
   document.getElementById('user-greeting').textContent = `שלום, ${data.name || "משתמש"}!`;
-
-  // הצגת interaction panel (כפתורים, טקסט, צ'אט)
-  document.getElementById('interaction-panel').classList.remove('hidden');
 
   // טעינת מודל 3D
   initThreeJSModel();
 }
 
-function parseJwt (token) {
+function parseJwt(token) {
   const base64Url = token.split('.')[1];
   const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-  const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+  const jsonPayload = decodeURIComponent(
+    atob(base64)
+      .split('')
+      .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+      .join('')
+  );
   return JSON.parse(jsonPayload);
 }
 
@@ -40,7 +42,7 @@ window.onload = function () {
   google.accounts.id.prompt();
 };
 
-// Three.js - מודל אמא 3D עם אנימציה טבעית
+// Three.js - מודל אמא 3D עם אנימציה
 function initThreeJSModel() {
   const container = document.getElementById('model-container');
   const scene = new THREE.Scene();
@@ -56,7 +58,7 @@ function initThreeJSModel() {
   scene.add(ambientLight);
 
   const loader = new THREE.GLTFLoader();
-  loader.load('assets/ima.glb',
+  loader.load('assets/model.glb', // ✅ כאן המודל שלך
     gltf => {
       const model = gltf.scene;
       model.scale.set(1.2,1.2,1.2);
@@ -71,8 +73,11 @@ function initThreeJSModel() {
           action.play();
           actions.push(action);
         });
-        blinkAction = actions[0]; // נשתמש באנימציה הראשונה כ״blink״ בסיסי
+        blinkAction = actions[0]; // אנימציה בסיסית
       }
+
+      // ⚡ כאן לאחר טעינת המודל, הצג כפתורים
+      document.getElementById('interaction-panel').classList.remove('hidden');
     },
     undefined,
     error => console.error('Error loading model:', error)
@@ -86,6 +91,13 @@ function initThreeJSModel() {
     renderer.render(scene, camera);
   }
   animate();
+
+  // התאמה ל‑responsive
+  window.addEventListener('resize', () => {
+    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(container.clientWidth, container.clientHeight);
+  });
 }
 
 // הפעלת אנימציה קצרה בזמן שליחה/הקלטה
