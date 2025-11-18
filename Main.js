@@ -34,7 +34,8 @@ function parseJwt(token) {
   return JSON.parse(jsonPayload);
 }
 
-window.onload = function () {
+// בדיקה אם המשתמש כבר מחובר
+function checkGoogleSignIn() {
   google.accounts.id.initialize({
     client_id: "1093623573018-6s23clvor9u80r08135aelfatuib3a55.apps.googleusercontent.com",
     callback: handleCredentialResponse
@@ -45,18 +46,22 @@ window.onload = function () {
     { theme: "outline", size: "large", text: "signin_with", logo_alignment: "left" }
   );
 
-  // אם כבר מחובר, טען מודל אוטומטית
   google.accounts.id.prompt(notification => {
     if(notification.isNotDisplayed() || notification.isSkippedMoment()) {
-      // כבר מחובר - הצג מסך ראשי והפעל מודל
+      // משתמש כבר מחובר – הצג מסך ראשי וטען מודל
       document.getElementById('landing-page').classList.add('hidden');
       document.getElementById('main-page').classList.remove('hidden');
 
       document.querySelector('.welcome-text').textContent = `ברוכים הבאים ל-${getImaName()}`;
       document.getElementById('user-greeting').textContent = `שלום!`;
+
       initThreeJSModel();
     }
   });
+}
+
+window.onload = function() {
+  checkGoogleSignIn();
 };
 
 // Three.js - מודל אמא 3D עם אנימציה
