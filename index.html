@@ -7,8 +7,24 @@
 <link rel="stylesheet" href="style.css">
 <link rel="icon" type="image/png" href="favicon.png">
 </head>
+
 <body>
 <h1>ברוך הבא לאמא!</h1>
+
+<div id="controls">
+    <label>בחר דמות אמא:</label>
+    <select id="modelSelect">
+        <option value="models/mom_default.glb">אמא – ברירת מחדל</option>
+        <option value="models/mom_pixar.glb">אמא – פיקסאר</option>
+        <option value="models/mom_realistic.glb">אמא – ריאליסטית</option>
+    </select>
+
+    <label>צבע שיער:</label>
+    <input type="color" id="hairColor" value="#442200">
+
+    <button id="laughBtn">גרום לאמא לצחוק</button>
+</div>
+
 <div id="loader" class="status">טוען את המודל...</div>
 <div id="error" class="status" style="display:none;"></div>
 <div id="container"></div>
