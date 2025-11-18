@@ -1,36 +1,28 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="he">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>אמא תלת־ממדית</title>
-<link rel="stylesheet" href="style.css">
-<link rel="icon" type="image/png" href="favicon.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ima - Mom 3D</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="main.js"></script>
 </head>
-
 <body>
-<h1>ברוך הבא לאמא!</h1>
+  <div id="landing-page">
+    <div class="logo-container">
+      <img src="assets/logo-ima.png" alt="לוגו אמא" class="logo">
+    </div>
+    <button id="google-login">כניסה עם Google</button>
+  </div>
 
-<div id="controls">
-    <label>בחר דמות אמא:</label>
-    <select id="modelSelect">
-        <option value="models/mom_default.glb">אמא – ברירת מחדל</option>
-        <option value="models/mom_pixar.glb">אמא – פיקסאר</option>
-        <option value="models/mom_realistic.glb">אמא – ריאליסטית</option>
-    </select>
-
-    <label>צבע שיער:</label>
-    <input type="color" id="hairColor" value="#442200">
-
-    <button id="laughBtn">גרום לאמא לצחוק</button>
-</div>
-
-<div id="loader" class="status">טוען את המודל...</div>
-<div id="error" class="status" style="display:none;"></div>
-<div id="container"></div>
-
-<script src="https://cdn.jsdelivr.net/npm/three@0.154.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.154.0/examples/js/loaders/GLTFLoader.js"></script>
-<script src="script.js"></script>
+  <div id="main-page" class="hidden">
+    <div id="model-container"></div>
+    <div id="interaction-panel">
+      <textarea id="text-input" placeholder="כתוב לאמא כאן..."></textarea>
+      <button id="send-text">שלח</button>
+      <button id="record-voice">🎤 הקלט קול</button>
+    </div>
+  </div>
 </body>
 </html>
