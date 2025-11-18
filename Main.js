@@ -1,7 +1,8 @@
+let mixer, clock, modelScene, actions = [], blinkAction;
+
 // Google Identity Services
 function handleCredentialResponse(response) {
   const data = parseJwt(response.credential);
-  console.log("User info:", data);
 
   // קביעת שם מותאם לשפה
   let userLang = navigator.language || "he";
@@ -11,8 +12,6 @@ function handleCredentialResponse(response) {
   // הצגת מסך ראשי
   document.getElementById('landing-page').classList.add('hidden');
   document.getElementById('main-page').classList.remove('hidden');
-
-  // הצגת שם משתמש
   document.getElementById('user-greeting').textContent = `שלום, ${data.name || "משתמש"}!`;
 
   // הצגת interaction panel (כפתורים, טקסט, צ'אט)
@@ -41,10 +40,11 @@ window.onload = function () {
   google.accounts.id.prompt();
 };
 
-// Three.js - מודל אמא 3D
+// Three.js - מודל אמא 3D עם אנימציה טבעית
 function initThreeJSModel() {
   const container = document.getElementById('model-container');
   const scene = new THREE.Scene();
+  modelScene = scene;
   const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
   camera.position.set(0, 1.5, 3);
 
@@ -58,19 +58,43 @@ function initThreeJSModel() {
   const loader = new THREE.GLTFLoader();
   loader.load('assets/ima.glb',
     gltf => {
-      gltf.scene.scale.set(1.2,1.2,1.2);
-      gltf.scene.position.set(0,0,-0.5);
-      scene.add(gltf.scene);
+      const model = gltf.scene;
+      model.scale.set(1.2,1.2,1.2);
+      model.position.set(0,0,-0.5);
+      scene.add(model);
+
+      // mixer לאנימציות
+      if(gltf.animations && gltf.animations.length > 0){
+        mixer = new THREE.AnimationMixer(model);
+        gltf.animations.forEach(clip => {
+          const action = mixer.clipAction(clip);
+          action.play();
+          actions.push(action);
+        });
+        blinkAction = actions[0]; // נשתמש באנימציה הראשונה כ״blink״ בסיסי
+      }
     },
     undefined,
     error => console.error('Error loading model:', error)
   );
 
+  clock = new THREE.Clock();
+
   function animate() {
     requestAnimationFrame(animate);
+    if(mixer) mixer.update(clock.getDelta());
     renderer.render(scene, camera);
   }
   animate();
+}
+
+// הפעלת אנימציה קצרה בזמן שליחה/הקלטה
+function playTemporaryAnimation(duration = 1.5){
+  if(!mixer || actions.length === 0) return;
+  const action = actions[0];
+  action.reset();
+  action.play();
+  setTimeout(()=> action.stop(), duration * 1000);
 }
 
 // כפתור שלח טקסט
@@ -79,8 +103,8 @@ document.getElementById('send-text').addEventListener('click', () => {
   if(text) {
     document.getElementById('text-input').value = "";
     addMessageToChat("אתה", text);
+    playTemporaryAnimation();
 
-    // תגובת אמא placeholder
     setTimeout(()=> addMessageToChat("אמא", "תודה על ההודעה!"), 800);
   }
 });
@@ -105,8 +129,8 @@ document.getElementById('record-voice').addEventListener('click', async () => {
       const blob = new Blob(chunks, { type: 'audio/webm' });
       const url = URL.createObjectURL(blob);
       addAudioToChat("אתה", url);
+      playTemporaryAnimation();
 
-      // תגובת אמא placeholder
       setTimeout(()=> addMessageToChat("אמא", "שמעתי את ההקלטה שלך!"), 1200);
     };
 
