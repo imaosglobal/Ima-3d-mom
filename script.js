@@ -1,79 +1,90 @@
-let scene, camera, renderer, loader, model;
+let scene, camera, renderer, model, mixer;
+const container = document.getElementById("container");
+const loader = document.getElementById("loader");
+const errorBox = document.getElementById("error");
 
-const container = document.getElementById('container');
-const loaderDiv = document.getElementById('loader');
-const errorDiv = document.getElementById('error');
+// --- יצירת סצנה ---
+scene = new THREE.Scene();
+scene.background = new THREE.Color(0xf0f0f0);
 
-init();
-animate();
+camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(0, 1.6, 3);
 
-function init() {
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf0f4ff);
+renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight * 0.7);
+container.appendChild(renderer.domElement);
 
-    camera = new THREE.PerspectiveCamera(75, container.clientWidth/container.clientHeight, 0.1, 1000);
-    camera.position.z = 3.6;
-    camera.position.y = 0.2;
+// תאורה
+const light = new THREE.DirectionalLight(0xffffff, 1);
+light.position.set(1, 2, 3);
+scene.add(light);
 
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(container.clientWidth, container.clientHeight, false);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    container.appendChild(renderer.domElement);
+// --- טעינת מודל ---
+const gltfLoader = new THREE.GLTFLoader();
 
-    // LIGHTS
-    const hemiLight = new THREE.HemisphereLight(0xffffee, 0x304070, 1.6);
-    scene.add(hemiLight);
+function loadModel(path) {
+    loader.style.display = "block";
+    errorBox.style.display = "none";
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.06);
-    dirLight.position.set(2, 7, 1.5);
-    dirLight.castShadow = true;
-    scene.add(dirLight);
+    gltfLoader.load(
+        path,
+        function (gltf) {
+            if (model) scene.remove(model);
 
-    // FLOOR
-    const groundGeo = new THREE.CircleGeometry(4.8, 40);
-    const groundMat = new THREE.MeshPhongMaterial({ color: 0xf0eed8, opacity: 0.84, transparent: true });
-    const ground = new THREE.Mesh(groundGeo, groundMat);
-    ground.position.y = -1.18; ground.rotation.x = -Math.PI / 2;
-    scene.add(ground);
+            model = gltf.scene;
+            model.position.set(0, -1.2, 0);
+            scene.add(model);
 
-    loader = new THREE.GLTFLoader();
-    loader.load(
-      'mom.glb',
-      function(gltf) {
-          model = gltf.scene;
-          model.traverse(function(node) {
-              if (node.isMesh) {
-                  node.castShadow = true;
-                  node.receiveShadow = true;
-                  node.material.side = THREE.DoubleSide;
-              }
-          });
-          model.scale.set(1.5, 1.5, 1.5);
-          model.position.y = -0.55;
-          scene.add(model);
-          loaderDiv.style.display = 'none';
-          errorDiv.style.display = 'none';
-      },
-      function(xhr) {
-          loaderDiv.textContent = "טוען את המודל... (" + Math.round(xhr.loaded/xhr.total*100) + "%)";
-      },
-      function(error) {
-          errorDiv.textContent = "אירעה שגיאה בטעינת mom.glb. ודאו שהקובץ בתיקייה!";
-          loaderDiv.style.display = 'none';
-          errorDiv.style.display = 'block';
-      }
+            mixer = new THREE.AnimationMixer(model);
+
+            if (gltf.animations.length > 0) {
+                mixer.clipAction(gltf.animations[0]).play(); // אנימציה בסיסית
+            }
+
+            loader.style.display = "none";
+        },
+        undefined,
+        function (error) {
+            errorBox.style.display = "block";
+            errorBox.innerText = "שגיאה בטעינת המודל";
+            console.error(error);
+        }
     );
-    window.addEventListener('resize', onWindowResize, false);
 }
-function onWindowResize() {
-    const w = container.clientWidth;
-    const h = container.clientHeight;
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-    renderer.setSize(w, h, false);
-}
+
+// טעינת ברירת מחדל
+loadModel("models/mom_default.glb");
+
+// --- שינוי דמות ---
+document.getElementById("modelSelect").addEventListener("change", (e) => {
+    loadModel(e.target.value);
+});
+
+// --- שינוי צבע שיער (מניח שיש אובייקט בשם Hair) ---
+document.getElementById("hairColor").addEventListener("input", (e) => {
+    if (!model) return;
+
+    model.traverse(obj => {
+        if (obj.name.toLowerCase().includes("hair")) {
+            obj.material.color = new THREE.Color(e.target.value);
+        }
+    });
+});
+
+// --- צחוק ---
+document.getElementById("laughBtn").addEventListener("click", () => {
+    if (!mixer) return;
+
+    const laugh = THREE.AnimationClip.findByName(mixer._root.animations, "Laugh");
+
+    if (laugh) mixer.clipAction(laugh).play();
+});
+
+// --- רינדור ---
 function animate() {
     requestAnimationFrame(animate);
-    if (model) model.rotation.y += 0.008;
+    if (mixer) mixer.update(0.01);
     renderer.render(scene, camera);
 }
+
+animate();
