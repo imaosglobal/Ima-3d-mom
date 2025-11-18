@@ -3,12 +3,22 @@ function handleCredentialResponse(response) {
   const data = parseJwt(response.credential);
   console.log("User info:", data);
 
-  // הצגת שם המשתמש
-  document.getElementById('user-greeting').textContent = `שלום, ${data.name || "משתמש"}!`;
+  // קביעת שם מותאם לשפה
+  let userLang = navigator.language || "he";
+  let imaName = userLang.startsWith("he") ? "אמא" : "Ima";
+  document.querySelector('.welcome-text').textContent = `ברוכים הבאים ל-${imaName}`;
 
+  // הצגת מסך ראשי
   document.getElementById('landing-page').classList.add('hidden');
   document.getElementById('main-page').classList.remove('hidden');
 
+  // הצגת שם משתמש
+  document.getElementById('user-greeting').textContent = `שלום, ${data.name || "משתמש"}!`;
+
+  // הצגת interaction panel (כפתורים, טקסט, צ'אט)
+  document.getElementById('interaction-panel').classList.remove('hidden');
+
+  // טעינת מודל 3D
   initThreeJSModel();
 }
 
