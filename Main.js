@@ -1,13 +1,17 @@
 let mixer, clock, modelScene, actions = [], blinkAction;
 
+// פונקציה לקבלת שם אמא לפי שפה
+function getImaName() {
+  let userLang = navigator.language || "he";
+  return userLang.startsWith("he") ? "אמא" : "Ima";
+}
+
 // Google Identity Services
 function handleCredentialResponse(response) {
   const data = parseJwt(response.credential);
 
-  // שם מותאם לשפה
-  let userLang = navigator.language || "he";
-  let imaName = userLang.startsWith("he") ? "אמא" : "Ima";
-  document.querySelector('.welcome-text').textContent = `ברוכים הבאים ל-${imaName}`;
+  // הצגת שם אמא לפי שפה
+  document.querySelector('.welcome-text').textContent = `ברוכים הבאים ל-${getImaName()}`;
 
   // הסתרת מסך כניסה
   document.getElementById('landing-page').classList.add('hidden');
@@ -35,11 +39,24 @@ window.onload = function () {
     client_id: "1093623573018-6s23clvor9u80r08135aelfatuib3a55.apps.googleusercontent.com",
     callback: handleCredentialResponse
   });
+
   google.accounts.id.renderButton(
     document.querySelector(".g_id_signin"),
     { theme: "outline", size: "large", text: "signin_with", logo_alignment: "left" }
   );
-  google.accounts.id.prompt();
+
+  // אם כבר מחובר, טען מודל אוטומטית
+  google.accounts.id.prompt(notification => {
+    if(notification.isNotDisplayed() || notification.isSkippedMoment()) {
+      // כבר מחובר - הצג מסך ראשי והפעל מודל
+      document.getElementById('landing-page').classList.add('hidden');
+      document.getElementById('main-page').classList.remove('hidden');
+
+      document.querySelector('.welcome-text').textContent = `ברוכים הבאים ל-${getImaName()}`;
+      document.getElementById('user-greeting').textContent = `שלום!`;
+      initThreeJSModel();
+    }
+  });
 };
 
 // Three.js - מודל אמא 3D עם אנימציה
@@ -58,7 +75,7 @@ function initThreeJSModel() {
   scene.add(ambientLight);
 
   const loader = new THREE.GLTFLoader();
-  loader.load('assets/model.glb', // ✅ כאן המודל שלך
+  loader.load('assets/model.glb', // שם הקובץ שלך
     gltf => {
       const model = gltf.scene;
       model.scale.set(1.2,1.2,1.2);
@@ -76,7 +93,7 @@ function initThreeJSModel() {
         blinkAction = actions[0]; // אנימציה בסיסית
       }
 
-      // ⚡ כאן לאחר טעינת המודל, הצג כפתורים
+      // ⚡ הצגת הכפתורים לאחר טעינת המודל
       document.getElementById('interaction-panel').classList.remove('hidden');
     },
     undefined,
@@ -100,7 +117,7 @@ function initThreeJSModel() {
   });
 }
 
-// הפעלת אנימציה קצרה בזמן שליחה/הקלטה
+// אנימציה קצרה בזמן שליחה/הקלטה
 function playTemporaryAnimation(duration = 1.5){
   if(!mixer || actions.length === 0) return;
   const action = actions[0];
@@ -116,8 +133,7 @@ document.getElementById('send-text').addEventListener('click', () => {
     document.getElementById('text-input').value = "";
     addMessageToChat("אתה", text);
     playTemporaryAnimation();
-
-    setTimeout(()=> addMessageToChat("אמא", "תודה על ההודעה!"), 800);
+    setTimeout(()=> addMessageToChat(getImaName(), "תודה על ההודעה!"), 800);
   }
 });
 
@@ -142,8 +158,7 @@ document.getElementById('record-voice').addEventListener('click', async () => {
       const url = URL.createObjectURL(blob);
       addAudioToChat("אתה", url);
       playTemporaryAnimation();
-
-      setTimeout(()=> addMessageToChat("אמא", "שמעתי את ההקלטה שלך!"), 1200);
+      setTimeout(()=> addMessageToChat(getImaName(), "שמעתי את ההקלטה שלך!"), 1200);
     };
 
     mediaRecorder.start();
