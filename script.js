@@ -1,9 +1,11 @@
+// כניסה עם Google (placeholder)
 document.getElementById('google-login').addEventListener('click', () => {
   document.getElementById('landing-page').classList.add('hidden');
   document.getElementById('main-page').classList.remove('hidden');
   initThreeJSModel();
 });
 
+// טעינת מודל אמא
 function initThreeJSModel() {
   const container = document.getElementById('model-container');
   const scene = new THREE.Scene();
@@ -31,4 +33,6 @@ function initThreeJSModel() {
   animate();
 }
 
-// טקסט והקלטת קול נשארים כפי שהוגדרו
+// כפתור שלח
+document.getElementById('send-text').addEventListener('click', () => {
+  const text = document.getElementById('text-input').value;
