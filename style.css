@@ -1,21 +1,123 @@
-<body>
-  <!-- Landing page -->
-  <div id="landing-page">
-    <div class="logo-container">
-      <img src="assets/logo-ima.png" alt="לוגו אמא" class="logo">
-    </div>
-    <button id="google-login">כניסה עם Google</button>
-  </div>
+/* בסיס */
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg, #ffe3e3, #fff7f0);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
 
-  <!-- Main page -->
-  <div id="main-page" class="hidden">
-    <div id="model-container"></div>
-    <div id="interaction-panel">
-      <textarea id="text-input" placeholder="כתוב לאמא כאן..."></textarea>
-      <div class="buttons-container">
-        <button id="send-text">שלח</button>
-        <button id="record-voice">🎤 הקלט קול</button>
-      </div>
-    </div>
-  </div>
-</body>
+.hidden { display: none; }
+
+/* Landing Page */
+#landing-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+  padding: 20px;
+}
+
+.logo {
+  width: 150px;
+  height: auto;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  animation: fadeIn 2s ease-in-out;
+}
+
+.welcome-text {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #333;
+  margin: 10px 0 0 0;
+}
+
+.intro-text {
+  font-size: 1.1rem;
+  color: #555;
+  margin-bottom: 20px;
+}
+
+/* כפתור Google */
+#google-login {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 24px;
+  font-size: 18px;
+  font-weight: 600;
+  border: none;
+  border-radius: 25px;
+  background-color: #fff;
+  color: #000;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: all 0.3s ease;
+}
+
+#google-login:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+}
+
+.google-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Main Page */
+#main-page {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #fff7f0;
+}
+
+#model-container {
+  width: 80%;
+  height: 60%;
+  margin-top: 40px;
+}
+
+#interaction-panel {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+textarea {
+  width: 280px;
+  height: 60px;
+  border-radius: 15px;
+  padding: 12px;
+  font-size: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border: 1px solid #ddd;
+  resize: none;
+  font-family: 'Inter', sans-serif;
+}
+
+.buttons-container {
+  display: flex;
+  gap: 10px;
+}
+
+button {
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+}
+
+/* אנימציה */
+@keyframes fadeIn { 0% {opacity:0;} 100% {opacity:1;} }
