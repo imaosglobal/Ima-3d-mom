@@ -99,7 +99,16 @@
 
     function loadAvatar() {
       loader.load(
-        modelURL,
+        modelURL,loader.load(
+  'https://models.readyplayer.me/691ca3ed48062250a474725a.glb',
+  function (gltf) {
+    scene.add(gltf.scene);
+  },
+  undefined,
+  function (err) {
+    console.error('Error loading model:', err);
+  }
+);
         gltf => {
           avatarModel = gltf.scene;
           avatarModel.scale.set(1.2, 1.2, 1.2);
