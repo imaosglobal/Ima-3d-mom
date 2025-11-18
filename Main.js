@@ -1,185 +1,131 @@
-let mixer, clock, modelScene, actions = [], blinkAction;
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-// פונקציה לקבלת שם אמא לפי שפה
-function getImaName() {
-  let userLang = navigator.language || "he";
-  return userLang.startsWith("he") ? "אמא" : "Ima";
-}
+// -------------------- סצנה, מצלמה ורנדרר --------------------
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xf7f7f7);
 
-// Google Identity Services
-function handleCredentialResponse(response) {
-  const data = parseJwt(response.credential);
+const camera = new THREE.PerspectiveCamera(
+  45,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  1000
+);
+camera.position.set(0, 1.6, 3);
 
-  // הצגת שם אמא לפי שפה
-  document.querySelector('.welcome-text').textContent = `ברוכים הבאים ל-${getImaName()}`;
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
 
-  // הסתרת מסך כניסה
-  document.getElementById('landing-page').classList.add('hidden');
-  document.getElementById('main-page').classList.remove('hidden');
-  document.getElementById('user-greeting').textContent = `שלום, ${data.name || "משתמש"}!`;
+// -------------------- אור --------------------
+const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
+hemiLight.position.set(0, 20, 0);
+scene.add(hemiLight);
 
-  // טעינת מודל 3D
-  initThreeJSModel();
-}
+const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+dirLight.position.set(-3, 10, -10);
+scene.add(dirLight);
 
-function parseJwt(token) {
-  const base64Url = token.split('.')[1];
-  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-  const jsonPayload = decodeURIComponent(
-    atob(base64)
-      .split('')
-      .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-      .join('')
-  );
-  return JSON.parse(jsonPayload);
-}
+// -------------------- טעינת מודל GLB --------------------
+const loader = new GLTFLoader();
+const modelURL = 'https://imaosglobal.github.io/Ima-3d-mom/assets/model.glb';
+let animateMixers = [];
 
-// בדיקה אם המשתמש כבר מחובר
-function checkGoogleSignIn() {
-  google.accounts.id.initialize({
-    client_id: "1093623573018-6s23clvor9u80r08135aelfatuib3a55.apps.googleusercontent.com",
-    callback: handleCredentialResponse
-  });
-
-  google.accounts.id.renderButton(
-    document.querySelector(".g_id_signin"),
-    { theme: "outline", size: "large", text: "signin_with", logo_alignment: "left" }
-  );
-
-  google.accounts.id.prompt(notification => {
-    if(notification.isNotDisplayed() || notification.isSkippedMoment()) {
-      // משתמש כבר מחובר – הצג מסך ראשי וטען מודל
-      document.getElementById('landing-page').classList.add('hidden');
-      document.getElementById('main-page').classList.remove('hidden');
-
-      document.querySelector('.welcome-text').textContent = `ברוכים הבאים ל-${getImaName()}`;
-      document.getElementById('user-greeting').textContent = `שלום!`;
-
-      initThreeJSModel();
-    }
-  });
-}
-
-window.onload = function() {
-  checkGoogleSignIn();
-};
-
-// Three.js - מודל אמא 3D עם אנימציה
-function initThreeJSModel() {
-  const container = document.getElementById('model-container');
-  const scene = new THREE.Scene();
-  modelScene = scene;
-  const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
-  camera.position.set(0, 1.5, 3);
-
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setSize(container.clientWidth, container.clientHeight);
-  container.appendChild(renderer.domElement);
-
-  const ambientLight = new THREE.AmbientLight(0xffffff, 1);
-  scene.add(ambientLight);
-
-  const loader = new THREE.GLTFLoader();
-  loader.load('assets/model.glb', // שם הקובץ שלך
-    gltf => {
+function loadAvatar() {
+  loader.load(
+    modelURL,
+    function (gltf) {
       const model = gltf.scene;
-      model.scale.set(1.2,1.2,1.2);
-      model.position.set(0,0,-0.5);
+      model.position.set(0, 0, 0);
+      model.scale.set(1.2, 1.2, 1.2);
+      model.rotation.y = Math.PI;
       scene.add(model);
 
-      // mixer לאנימציות
-      if(gltf.animations && gltf.animations.length > 0){
-        mixer = new THREE.AnimationMixer(model);
-        gltf.animations.forEach(clip => {
-          const action = mixer.clipAction(clip);
-          action.play();
-          actions.push(action);
-        });
-        blinkAction = actions[0]; // אנימציה בסיסית
+      if (gltf.animations && gltf.animations.length > 0) {
+        const mixer = new THREE.AnimationMixer(model);
+        gltf.animations.forEach((clip) => mixer.clipAction(clip).play());
+        animateMixers.push(mixer);
       }
 
-      // ⚡ הצגת הכפתורים לאחר טעינת המודל
-      document.getElementById('interaction-panel').classList.remove('hidden');
+      showUIButtons();
     },
     undefined,
-    error => console.error('Error loading model:', error)
+    function (error) {
+      console.error('Error loading GLB:', error);
+    }
   );
+}
 
-  clock = new THREE.Clock();
-
-  function animate() {
-    requestAnimationFrame(animate);
-    if(mixer) mixer.update(clock.getDelta());
-    renderer.render(scene, camera);
-  }
-  animate();
-
-  // התאמה ל‑responsive
-  window.addEventListener('resize', () => {
-    camera.aspect = container.clientWidth / container.clientHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(container.clientWidth, container.clientHeight);
+// -------------------- Google Sign-In --------------------
+function initGoogleSignIn() {
+  google.accounts.id.initialize({
+    client_id: '1093623573018-6s23clvor9u80r08135aelfatuib3a55.apps.googleusercontent.com',
+    callback: handleCredentialResponse,
   });
+  google.accounts.id.renderButton(
+    document.getElementById('google-signin'),
+    { theme: 'outline', size: 'large', width: '250' }
+  );
 }
 
-// אנימציה קצרה בזמן שליחה/הקלטה
-function playTemporaryAnimation(duration = 1.5){
-  if(!mixer || actions.length === 0) return;
-  const action = actions[0];
-  action.reset();
-  action.play();
-  setTimeout(()=> action.stop(), duration * 1000);
+function handleCredentialResponse(response) {
+  const payload = decodeJwtResponse(response.credential);
+
+  const userLang = navigator.language || 'he';
+  const momName = userLang.startsWith('he') ? 'אמא' : 'Ima';
+  document.getElementById('welcome-text').textContent = `ברוכים הבאים ל-${momName}!`;
+
+  loadAvatar();
+  document.getElementById('google-signin').style.display = 'none';
 }
 
-// כפתור שלח טקסט
-document.getElementById('send-text').addEventListener('click', () => {
-  const text = document.getElementById('text-input').value.trim();
-  if(text) {
-    document.getElementById('text-input').value = "";
-    addMessageToChat("אתה", text);
-    playTemporaryAnimation();
-    setTimeout(()=> addMessageToChat(getImaName(), "תודה על ההודעה!"), 800);
-  }
+function decodeJwtResponse(token) {
+  const base64Url = token.split('.')[1];
+  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  return JSON.parse(window.atob(base64));
+}
+
+// -------------------- כפתורי UI --------------------
+function showUIButtons() {
+  const btnContainer = document.createElement('div');
+  btnContainer.style.position = 'absolute';
+  btnContainer.style.bottom = '20px';
+  btnContainer.style.left = '50%';
+  btnContainer.style.transform = 'translateX(-50%)';
+  btnContainer.style.display = 'flex';
+  btnContainer.style.gap = '10px';
+  document.body.appendChild(btnContainer);
+
+  const sendBtn = document.createElement('button');
+  sendBtn.textContent = 'שלח הודעה';
+  sendBtn.onclick = () => alert('כאן תשלח את ההודעה שלך לאמא');
+  btnContainer.appendChild(sendBtn);
+
+  const recordBtn = document.createElement('button');
+  recordBtn.textContent = 'הקלט קול';
+  recordBtn.onclick = () => alert('כאן תתחיל הקלטת קול');
+  btnContainer.appendChild(recordBtn);
+}
+
+// -------------------- רינדור ואנימציה --------------------
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const delta = clock.getDelta();
+  animateMixers.forEach((mixer) => mixer.update(delta));
+  renderer.render(scene, camera);
+}
+animate();
+
+// -------------------- התאמת חלון --------------------
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-function addMessageToChat(sender, text) {
-  const chat = document.getElementById('chat-box');
-  const msg = document.createElement('div');
-  msg.textContent = `${sender}: ${text}`;
-  chat.appendChild(msg);
-  chat.scrollTop = chat.scrollHeight;
-}
-
-// הקלטת קול
-document.getElementById('record-voice').addEventListener('click', async () => {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const mediaRecorder = new MediaRecorder(stream);
-    let chunks = [];
-
-    mediaRecorder.ondataavailable = e => chunks.push(e.data);
-    mediaRecorder.onstop = () => {
-      const blob = new Blob(chunks, { type: 'audio/webm' });
-      const url = URL.createObjectURL(blob);
-      addAudioToChat("אתה", url);
-      playTemporaryAnimation();
-      setTimeout(()=> addMessageToChat(getImaName(), "שמעתי את ההקלטה שלך!"), 1200);
-    };
-
-    mediaRecorder.start();
-    setTimeout(()=> mediaRecorder.stop(), 5000);
-    alert("הקלטה התחילה - תסתיים אוטומטית לאחר 5 שניות");
-
-  } catch (err) {
-    console.error("Mic error:", err);
-    alert("לא ניתן לגשת למיקרופון");
-  }
-});
-
-function addAudioToChat(sender, url) {
-  const chat = document.getElementById('chat-box');
-  const msg = document.createElement('div');
-  msg.innerHTML = `${sender}: <audio controls src="${url}"></audio>`;
-  chat.appendChild(msg);
-  chat.scrollTop = chat.scrollHeight;
-}
+// -------------------- אתחול --------------------
+window.onload = () => {
+  initGoogleSignIn();
+};
