@@ -1,0 +1,9 @@
+Ima-3d-mom/Ima-3d-mom $ chmod +x hooks/*
+~/Ima-3d-mom/Ima-3d-mom $ ls -l hooks
+total 12
+-rwx------. 1 u0_a376 u0_a376 63 Nov 19 04:45 post-merge
+-rwx------. 1 u0_a376 u0_a376 64 Nov 19 04:37 pre-commit
+-rwx------. 1 u0_a376 u0_a376 61 Nov 19 04:44 pre-push
+~/Ima-3d-mom/Ima-3d-mom $ cp hooks/* .git/hooks/
+~/Ima-3d-mom/Ima-3d-mom $ cp hooks/* .git/hooks/
+~/Ima-3
