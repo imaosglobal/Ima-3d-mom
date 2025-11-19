@@ -1,23 +1,18 @@
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.157.0/build/three.module.js';
+import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.157.0/examples/jsm/loaders/GLTFLoader.js';
 
-// -------------------- סצנה, מצלמה ורנדרר --------------------
+// ---------------- סצנה, מצלמה ורנדרר ----------------
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xf7f7f7);
 
-const camera = new THREE.PerspectiveCamera(
-  45,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  1000
-);
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(0, 1.6, 3);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// -------------------- אור --------------------
+// ---------------- אור ----------------
 const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
 hemiLight.position.set(0, 20, 0);
 scene.add(hemiLight);
@@ -26,16 +21,16 @@ const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
 dirLight.position.set(-3, 10, -10);
 scene.add(dirLight);
 
-// -------------------- טעינת מודל GLB --------------------
+// ---------------- טעינת מודל ----------------
 const loader = new GLTFLoader();
 const modelURL = 'https://imaosglobal.github.io/Ima-3d-mom/assets/model.glb';
-let animateMixers = [];
-let avatarModel;
+let avatarModel = null;
+const animateMixers = [];
 
 function loadAvatar() {
   loader.load(
     modelURL,
-    function (gltf) {
+    gltf => {
       avatarModel = gltf.scene;
       avatarModel.position.set(0, 0, 0);
       avatarModel.scale.set(1.2, 1.2, 1.2);
@@ -44,50 +39,68 @@ function loadAvatar() {
 
       if (gltf.animations && gltf.animations.length > 0) {
         const mixer = new THREE.AnimationMixer(avatarModel);
-        gltf.animations.forEach((clip) => mixer.clipAction(clip).play());
+        gltf.animations.forEach(clip => mixer.clipAction(clip).play());
         animateMixers.push(mixer);
       }
 
       showUIButtons();
     },
     undefined,
-    function (error) {
-      console.error('Error loading GLB:', error);
+    err => {
+      console.warn('מודל לא נטען, מציג UI בלבד:', err);
+      showUIButtons();
     }
   );
 }
 
-// -------------------- Google Sign-In --------------------
+// ---------------- Google Sign-In ----------------
 function initGoogleSignIn() {
+  if (!window.google || !google.accounts) {
+    console.error('Google API לא נטען');
+    document.getElementById('welcome-text').textContent = 'ברוכים הבאים!';
+    showUIButtons();
+    return;
+  }
   google.accounts.id.initialize({
     client_id: '1093623573018-6s23clvor9u80r08135aelfatuib3a55.apps.googleusercontent.com',
     callback: handleCredentialResponse,
   });
   google.accounts.id.renderButton(
     document.getElementById('google-signin'),
-    { theme: 'outline', size: 'large', width: '250' }
+    { theme: 'outline', size: 'large', width: 250 }
   );
 }
 
 function handleCredentialResponse(response) {
-  const payload = decodeJwtResponse(response.credential);
-
-  const userLang = navigator.language || 'he';
-  const momName = userLang.startsWith('he') ? 'אמא' : 'Ima';
-  document.getElementById('welcome-text').textContent = `ברוכים הבאים ל-${momName}!`;
-
-  loadAvatar();
-  document.getElementById('google-signin').style.display = 'none';
+  try {
+    const payload = decodeJwt(response.credential);
+    const userLang = navigator.language || 'he';
+    const momName = userLang.startsWith('he') ? 'אמא' : 'Mom';
+    document.getElementById('welcome-text').textContent = `ברוכים הבאים ל-${momName}!`;
+    window.userProfile = payload;
+    document.getElementById('google-signin').style.display = 'none';
+    loadAvatar();
+  } catch (e) {
+    console.error('שגיאה בעיבוד Google Credential:', e);
+    document.getElementById('welcome-text').textContent = 'ברוכים הבאים!';
+    showUIButtons();
+  }
 }
 
-function decodeJwtResponse(token) {
-  const base64Url = token.split('.')[1];
-  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-  return JSON.parse(window.atob(base64));
+function decodeJwt(token) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(window.atob(base64));
+  } catch {
+    return {};
+  }
 }
 
-// -------------------- כפתורי UI --------------------
+// ---------------- UI Buttons ----------------
 function showUIButtons() {
+  if (document.querySelector('.button-container')) return; // למנוע כפילות
+
   const btnContainer = document.createElement('div');
   btnContainer.className = 'button-container';
   document.body.appendChild(btnContainer);
@@ -103,16 +116,15 @@ function showUIButtons() {
   btnContainer.appendChild(recordBtn);
 }
 
-// -------------------- רינדור ואנימציה --------------------
+// ---------------- אנימציה ורינדור ----------------
 const clock = new THREE.Clock();
 let rotateAngle = 0;
 
 function animate() {
   requestAnimationFrame(animate);
   const delta = clock.getDelta();
-  animateMixers.forEach((mixer) => mixer.update(delta));
+  animateMixers.forEach(m => m.update(delta));
 
-  // --- אנימציה קלה לדמות (סיבוב והטיית ראש) ---
   if (avatarModel) {
     rotateAngle += 0.002;
     avatarModel.rotation.y = Math.PI + Math.sin(rotateAngle) * 0.05;
@@ -123,14 +135,12 @@ function animate() {
 }
 animate();
 
-// -------------------- התאמת חלון --------------------
+// ---------------- רספונסיב ----------------
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// -------------------- אתחול --------------------
-window.onload = () => {
-  initGoogleSignIn();
-};
+// ---------------- אתחול ----------------
+window.addEventListener('load', initGoogleSignIn);
