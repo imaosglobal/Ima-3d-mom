@@ -31,21 +31,27 @@ const loader = new GLTFLoader();
 const modelURL = 'https://imaosglobal.github.io/Ima-3d-mom/assets/model.glb';
 let animateMixers = [];
 let avatarModel;
+let placeholderMesh;
 
-function createPlaceholderAvatar() {
-  // יצירת דמות בסיסית במקום GLB
-  const geometry = new THREE.BoxGeometry(0.5, 1.6, 0.3);
-  const material = new THREE.MeshStandardMaterial({ color: 0x8888ff });
-  avatarModel = new THREE.Mesh(geometry, material);
-  avatarModel.position.set(0, 0.8, 0); // חצי גובה כדי שיהיה על הקרקע
-  scene.add(avatarModel);
-  showUIButtons();
+// פונקציה ליצירת placeholder בסיסי
+function createPlaceholder() {
+  const geometry = new THREE.BoxGeometry(0.5, 1, 0.3);
+  const material = new THREE.MeshStandardMaterial({ color: 0x888888 });
+  placeholderMesh = new THREE.Mesh(geometry, material);
+  placeholderMesh.position.set(0, 0.5, 0);
+  scene.add(placeholderMesh);
 }
 
+// טוען מודל עם timeout fallback
 function loadAvatar() {
+  let loaded = false;
+
   loader.load(
     modelURL,
     function (gltf) {
+      loaded = true;
+      if (placeholderMesh) scene.remove(placeholderMesh);
+
       avatarModel = gltf.scene;
       avatarModel.position.set(0, 0, 0);
       avatarModel.scale.set(1.2, 1.2, 1.2);
@@ -62,60 +68,62 @@ function loadAvatar() {
     },
     undefined,
     function (error) {
-      console.warn('Error loading GLB, using placeholder avatar:', error);
-      createPlaceholderAvatar();
+      console.error('Error loading GLB:', error);
+      if (!loaded && !placeholderMesh) createPlaceholder();
     }
   );
+
+  // Timeout fallback אחרי 5 שניות
+  setTimeout(() => {
+    if (!loaded && !placeholderMesh) {
+      console.warn("GLB didn't load in time, showing placeholder");
+      createPlaceholder();
+      showUIButtons();
+    }
+  }, 5000);
 }
 
 // -------------------- Google Sign-In --------------------
 function initGoogleSignIn() {
-  if (!window.google || !google.accounts) {
-    console.warn('Google Sign-In library not loaded, continuing without sign-in.');
-    loadAvatar(); // טען דמות גם אם Google Sign-In לא טעון
-    return;
+  try {
+    google.accounts.id.initialize({
+      client_id: '1093623573018-6s23clvor9u80r08135aelfatuib3a55.apps.googleusercontent.com',
+      callback: handleCredentialResponse,
+    });
+    google.accounts.id.renderButton(
+      document.getElementById('google-signin'),
+      { theme: 'outline', size: 'large', width: '250' }
+    );
+  } catch (e) {
+    console.warn("Google Sign-In not available:", e);
+    loadAvatar(); // נטען גם בלי Google
   }
-
-  google.accounts.id.initialize({
-    client_id: '1093623573018-6s23clvor9u80r08135aelfatuib3a55.apps.googleusercontent.com',
-    callback: handleCredentialResponse,
-  });
-  google.accounts.id.renderButton(
-    document.getElementById('google-signin'),
-    { theme: 'outline', size: 'large', width: 250 }
-  );
 }
 
 function handleCredentialResponse(response) {
   try {
     const payload = decodeJwtResponse(response.credential);
-
     const userLang = navigator.language || 'he';
     const momName = userLang.startsWith('he') ? 'אמא' : 'Ima';
     document.getElementById('welcome-text').textContent = `ברוכים הבאים ל-${momName}!`;
-
     document.getElementById('google-signin').style.display = 'none';
-
-    loadAvatar();
-  } catch (err) {
-    console.error('Error decoding Google credential:', err);
-    loadAvatar();
+  } catch (e) {
+    console.warn("JWT decode failed:", e);
+  } finally {
+    loadAvatar(); // נטען תמיד
   }
 }
 
 function decodeJwtResponse(token) {
-  try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    return JSON.parse(window.atob(base64));
-  } catch (err) {
-    console.error('Invalid JWT token', err);
-    return {};
-  }
+  const base64Url = token.split('.')[1];
+  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  return JSON.parse(window.atob(base64));
 }
 
 // -------------------- כפתורי UI --------------------
 function showUIButtons() {
+  if (document.querySelector('.button-container')) return;
+
   const btnContainer = document.createElement('div');
   btnContainer.className = 'button-container';
   document.body.appendChild(btnContainer);
@@ -144,6 +152,9 @@ function animate() {
     rotateAngle += 0.002;
     avatarModel.rotation.y = Math.PI + Math.sin(rotateAngle) * 0.05;
     avatarModel.position.y = 0.02 * Math.sin(rotateAngle * 2);
+  } else if (placeholderMesh) {
+    rotateAngle += 0.002;
+    placeholderMesh.rotation.y = Math.sin(rotateAngle) * 0.1;
   }
 
   renderer.render(scene, camera);
@@ -159,10 +170,5 @@ window.addEventListener('resize', () => {
 
 // -------------------- אתחול --------------------
 window.onload = () => {
-  try {
-    initGoogleSignIn();
-  } catch (err) {
-    console.error('Error during initialization:', err);
-    loadAvatar();
-  }
+  initGoogleSignIn();
 };
