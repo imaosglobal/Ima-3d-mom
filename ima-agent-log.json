@@ -9,5 +9,38 @@
     "type": "external",
     "success": false,
     "error": "Invalid character in header content [\"Authorization\"]"
+  },
+  {
+    "timestamp": "2025-11-19T03:05:48.114Z",
+    "type": "internal",
+    "success": true
+  },
+  {
+    "timestamp": "2025-11-19T03:05:48.133Z",
+    "type": "external",
+    "success": false,
+    "error": "Invalid character in header content [\"Authorization\"]"
+  },
+  {
+    "timestamp": "2025-11-19T03:10:19.838Z",
+    "type": "internal",
+    "success": true
+  },
+  {
+    "timestamp": "2025-11-19T03:10:20.290Z",
+    "type": "external",
+    "success": false,
+    "error": "Request failed with status code 401"
+  },
+  {
+    "timestamp": "2025-11-19T03:17:46.692Z",
+    "type": "internal",
+    "success": true
+  },
+  {
+    "timestamp": "2025-11-19T03:17:47.331Z",
+    "type": "external",
+    "success": false,
+    "error": "Request failed with status code 429"
   }
 ]
