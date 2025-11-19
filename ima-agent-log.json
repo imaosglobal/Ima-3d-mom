@@ -152,5 +152,27 @@
     "type": "external",
     "success": false,
     "error": "Request failed with status code 429"
+  },
+  {
+    "timestamp": "2025-11-19T04:02:50.032Z",
+    "type": "internal",
+    "success": true
+  },
+  {
+    "timestamp": "2025-11-19T04:02:50.569Z",
+    "type": "external",
+    "success": false,
+    "error": "Request failed with status code 429"
+  },
+  {
+    "timestamp": "2025-11-19T04:10:40.451Z",
+    "type": "internal",
+    "success": true
+  },
+  {
+    "timestamp": "2025-11-19T04:10:40.977Z",
+    "type": "external",
+    "success": false,
+    "error": "Request failed with status code 429"
   }
 ]
