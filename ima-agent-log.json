@@ -42,5 +42,71 @@
     "type": "external",
     "success": false,
     "error": "Request failed with status code 429"
+  },
+  {
+    "timestamp": "2025-11-19T03:23:44.882Z",
+    "type": "internal",
+    "success": true
+  },
+  {
+    "timestamp": "2025-11-19T03:23:45.759Z",
+    "type": "external",
+    "success": false,
+    "error": "Request failed with status code 429"
+  },
+  {
+    "timestamp": "2025-11-19T03:24:46.962Z",
+    "type": "internal",
+    "success": true
+  },
+  {
+    "timestamp": "2025-11-19T03:24:47.805Z",
+    "type": "external",
+    "success": false,
+    "error": "Request failed with status code 429"
+  },
+  {
+    "timestamp": "2025-11-19T03:25:35.385Z",
+    "type": "internal",
+    "success": true
+  },
+  {
+    "timestamp": "2025-11-19T03:25:36.258Z",
+    "type": "external",
+    "success": false,
+    "error": "Request failed with status code 429"
+  },
+  {
+    "timestamp": "2025-11-19T03:26:12.472Z",
+    "type": "internal",
+    "success": true
+  },
+  {
+    "timestamp": "2025-11-19T03:26:13.784Z",
+    "type": "external",
+    "success": false,
+    "error": "Request failed with status code 429"
+  },
+  {
+    "timestamp": "2025-11-19T03:27:40.779Z",
+    "type": "internal",
+    "success": true
+  },
+  {
+    "timestamp": "2025-11-19T03:27:41.214Z",
+    "type": "external",
+    "success": false,
+    "error": "Request failed with status code 429"
+  },
+  {
+    "timestamp": "2025-11-19T03:32:48.896Z",
+    "type": "internal",
+    "success": true
+  },
+  {
+    "timestamp": "2025-11-19T03:32:49.371Z",
+    "type": "external",
+    "success": false,
+    "error": "Request failed with status code 429"
   }
 ]
