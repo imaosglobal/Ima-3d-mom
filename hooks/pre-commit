@@ -1,0 +1,3 @@
+#!/bin/sh
+HOOK_NAME="pre-commit" node ./ima-autocheck-agent.js
+
