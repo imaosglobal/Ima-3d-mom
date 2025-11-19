@@ -1,0 +1,2 @@
+#!/bin/sh
+HOOK_NAME="pre-push" node ./ima-autocheck-agent.js
