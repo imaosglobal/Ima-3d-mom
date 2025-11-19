@@ -1,0 +1,2 @@
+#!/bin/sh
+HOOK_NAME="post-merge" node ./ima-autocheck-agent.js
