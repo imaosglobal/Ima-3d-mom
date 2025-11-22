@@ -40,7 +40,19 @@
       font-size: 24px;
       color: #666;
     }
-    <div id="console" style="position:absolute;bottom:0;width:100%;height:150px;overflow:auto;background:#000;color:#0f0;font-size:12px;padding:5px;"></div>
+    #console {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 150px;
+      overflow: auto;
+      background: #000;
+      color: #0f0;
+      font-size: 12px;
+      font-family: monospace;
+      padding: 5px;
+      z-index: 1000;
+    }
   </style>
 </head>
 <body>
@@ -48,6 +60,7 @@
 <div id="google-signin"></div>
 <div id="welcome-text">טוען...</div>
 <div id="placeholder">טוען דמות...</div>
+<div id="console"></div> <!-- כאן הקונסול מוצב כראוי -->
 
 <!-- MAIN SCRIPT -->
 <script type="module" src="main.js"></script>
