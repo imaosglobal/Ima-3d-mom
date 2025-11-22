@@ -28,9 +28,10 @@ scene.add(directionalLight);
 // טעינת מודל
 const loader = new GLTFLoader();
 loader.load(
-  './assets/model.glb',
+  'assets/model.glb',
   function (gltf) {
     scene.add(gltf.scene);
+    console.log('מודל נטען בהצלחה!');
 
     // הסתרת הודעות טעינה
     const welcome = document.getElementById('welcome-text');
