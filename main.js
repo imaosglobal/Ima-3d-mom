@@ -25,10 +25,10 @@ const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
 directionalLight.position.set(0, 5, 5);
 scene.add(directionalLight);
 
-// טעינת מודל
+// טעינת מודל מהקישור הקבוע של Ready Player Me
 const loader = new GLTFLoader();
 loader.load(
-  'assets/model.glb',
+  'https://models.readyplayer.me/691ca3ed48062250a474725a.glb',
   function (gltf) {
     scene.add(gltf.scene);
     console.log('מודל נטען בהצלחה!');
