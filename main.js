@@ -28,7 +28,7 @@ scene.add(directionalLight);
 // טעינת מודל מהקישור הקבוע של Ready Player Me
 const loader = new GLTFLoader();
 loader.load(
-  'https://models.readyplayer.me/691ca3ed48062250a474725a.glb',
+  'assets/691ca3ed48062250a474725a.glb',
   function (gltf) {
     scene.add(gltf.scene);
     console.log('מודל נטען בהצלחה!');
