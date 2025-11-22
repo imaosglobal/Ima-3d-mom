@@ -1,7 +1,17 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-// סצנה, מצלמה ורנדרר
+// ====== פונקציית קונסול ויזואלי ======
+function log(msg) {
+  console.log(msg);
+  const consoleDiv = document.getElementById('console');
+  if (consoleDiv) {
+    consoleDiv.innerHTML += msg + '<br>';
+    consoleDiv.scrollTop = consoleDiv.scrollHeight;
+  }
+}
+
+// ====== סצנה, מצלמה ורנדרר ======
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xf0f8ff);
 
@@ -17,7 +27,7 @@ const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// תאורה
+// ====== תאורה ======
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
 scene.add(ambientLight);
 
@@ -25,13 +35,13 @@ const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
 directionalLight.position.set(0, 5, 5);
 scene.add(directionalLight);
 
-// טעינת מודל מהקישור הקבוע של Ready Player Me
+// ====== טעינת מודל ======
 const loader = new GLTFLoader();
 loader.load(
   'assets/691ca3ed48062250a474725a.glb',
   function (gltf) {
     scene.add(gltf.scene);
-    console.log('מודל נטען בהצלחה!');
+    log('מודל נטען בהצלחה!');
 
     // הסתרת הודעות טעינה
     const welcome = document.getElementById('welcome-text');
@@ -40,23 +50,34 @@ loader.load(
     if (placeholder) placeholder.style.display = 'none';
   },
   function (xhr) {
-    console.log(`טעינה: ${(xhr.loaded / xhr.total * 100).toFixed(2)}%`);
+    const percent = (xhr.loaded / xhr.total * 100).toFixed(2);
+    log(`טעינה: ${percent}%`);
+    const placeholder = document.getElementById('placeholder');
+    if (placeholder) placeholder.innerText = `טוען: ${percent}%`;
   },
   function (error) {
     console.error('שגיאה בטעינת המודל:', error);
+    log('שגיאה בטעינת המודל');
     const placeholder = document.getElementById('placeholder');
     if (placeholder) placeholder.innerText = 'שגיאה בטעינת המודל';
   }
 );
 
-// רינדור והאנימציה
+// ====== רינדור והאנימציה ======
 function animate() {
   requestAnimationFrame(animate);
+
+  // סיבוב איטי למודל (אופציונלי)
+  if (scene.children.length > 0) {
+    const model = scene.children.find(c => c.type === 'Group');
+    if (model) model.rotation.y += 0.005;
+  }
+
   renderer.render(scene, camera);
 }
 animate();
 
-// התאמת המסך לשינוי גודל
+// ====== התאמת המסך לשינוי גודל ======
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
