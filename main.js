@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 // ====== פונקציית קונסול ויזואלי ======
 function log(msg) {
-  console.log(msg);
+  console.log(msg); // עדיין לשמור בקונסול של הדפדפן
   const consoleDiv = document.getElementById('console');
   if (consoleDiv) {
     consoleDiv.innerHTML += msg + '<br>';
@@ -41,7 +41,7 @@ loader.load(
   'assets/691ca3ed48062250a474725a.glb',
   function (gltf) {
     scene.add(gltf.scene);
-    log('מודל נטען בהצלחה!');
+    log('✅ מודל נטען בהצלחה!');
 
     // הסתרת הודעות טעינה
     const welcome = document.getElementById('welcome-text');
@@ -51,13 +51,13 @@ loader.load(
   },
   function (xhr) {
     const percent = (xhr.loaded / xhr.total * 100).toFixed(2);
-    log(`טעינה: ${percent}%`);
+    log(`⏳ טעינה: ${percent}%`);
     const placeholder = document.getElementById('placeholder');
     if (placeholder) placeholder.innerText = `טוען: ${percent}%`;
   },
   function (error) {
-    console.error('שגיאה בטעינת המודל:', error);
-    log('שגיאה בטעינת המודל');
+    log('❌ שגיאה בטעינת המודל');
+    console.error(error);
     const placeholder = document.getElementById('placeholder');
     if (placeholder) placeholder.innerText = 'שגיאה בטעינת המודל';
   }
