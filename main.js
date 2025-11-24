@@ -45,7 +45,10 @@
   }
 
   // נסה לטעון את המודל מהassets
-  const MODEL_PATH = 'assets/model.glb';
+ const MODEL_PATH = 'assets/691ca3ed48062250a474725a.glb';
+loader.load(MODEL_PATH, gltf => {
+  // … שאר הקוד שלך
+}, onProgress, onError); ;
 
   loader.load(MODEL_PATH, gltf => {
     overlayLoader.style.display = 'none';
