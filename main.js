@@ -45,7 +45,7 @@
   }
 
   // נסה לטעון את המודל מהassets
- const MODEL_PATH = 'assets/gbl.model.zip';
+ const MODEL_PATH = 'assets/3DModel.glb';
 loader.load(MODEL_PATH, gltf => {
   // … שאר הקוד שלך
 }, onProgress, onError); ;
