@@ -1,85 +1,94 @@
-// main.js — Three.js minimal GLTF with Draco and basic error handling
 (() => {
-  const canvas = document.getElementById('c');
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-  renderer.setPixelRatio(window.devicePixelRatio ? Math.min(window.devicePixelRatio, 2) : 1);
-  renderer.setSize(window.innerWidth, window.innerHeight);
+// Container
+const container = document.getElementById('scene-container');
+const overlayLoader = document.getElementById('loader');
 
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0f0f12);
+// Renderer
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.shadowMap.enabled = true;
+container.appendChild(renderer.domElement);
 
-  const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-  camera.position.set(0, 1.6, 3);
+// Scene & Camera
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f0f12);
 
-  const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.0);
-  hemi.position.set(0, 1, 0);
-  scene.add(hemi);
-  const dir = new THREE.DirectionalLight(0xffffff, 0.8);
-  dir.position.set(5,10,7.5);
-  scene.add(dir);
+const camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
+camera.position.set(0, 1.6, 3);
 
-  const controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.target.set(0,1.2,0);
-  controls.update();
+// Lights
+const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.0);
+hemi.position.set(0, 1, 0);
+scene.add(hemi);
 
-  // Loaders
-  const dracoLoader = new THREE.DRACOLoader();
-  // אם תרצה לשים נתיב ל־draco decoder מקומי - הכנס אותו כאן
-  // dracoLoader.setDecoderPath('path/to/draco/');
+const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+dir.position.set(5, 10, 7.5);
+dir.castShadow = true;
+scene.add(dir);
 
-  const loader = new THREE.GLTFLoader();
-  loader.setDRACOLoader(dracoLoader);
+// Controls
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 1.2, 0);
+controls.update();
 
-  const overlayLoader = document.getElementById('loader');
+// Loaders
+const dracoLoader = new THREE.DRACOLoader();
+const loader = new THREE.GLTFLoader();
+loader.setDRACOLoader(dracoLoader);
 
-  function onProgress(xhr){
-    if (xhr.lengthComputable) {
-      const pct = (xhr.loaded / xhr.total * 100).toFixed(0);
-      overlayLoader.textContent = 'טוען מודל... ' + pct + '%';
-    }
-  }
+function onProgress(xhr){
+if(xhr.lengthComputable){
+overlayLoader.textContent = 'טוען מודל... ' + Math.floor(xhr.loaded / xhr.total * 100) + '%';
+}
+}
 
-  function onError(err){
-    console.error('GLTF load error', err);
-    overlayLoader.textContent = 'שגיאה בטעינת המודל. בדוק assets/model.glb';
-  }
+function onError(err){
+console.error('GLTF load error', err);
+overlayLoader.textContent = 'שגיאה בטעינת המודל. בדוק assets/3DModel.glb';
+}
 
-  // נסה לטעון את המודל מהassets
- const MODEL_PATH = 'assets/3DModel.glb';
-loader.load(MODEL_PATH, gltf => {
-  // … שאר הקוד שלך
-}, onProgress, onError); ;
+// Load 3D Model
+const MODEL_PATH = 'assets/3DModel.glb';
+loader.load(
+MODEL_PATH,
+gltf => {
+overlayLoader.style.display = 'none';
+const root = gltf.scene || gltf.scenes[0];
+root.traverse(node => {
+if(node.isMesh){
+node.castShadow = true;
+node.receiveShadow = true;
+}
+});
+scene.add(root);
 
-  loader.load(MODEL_PATH, gltf => {
-    overlayLoader.style.display = 'none';
-    const root = gltf.scene || gltf.scenes[0];
-    root.traverse(node => { if (node.isMesh) { node.castShadow = true; node.receiveShadow = true; } });
-    scene.add(root);
-    // scale/position if needed
-    root.position.set(0,0,0);
-    // אם רוצים להתאים גודל אוטומטית
-    const box = new THREE.Box3().setFromObject(root);
-    const size = box.getSize(new THREE.Vector3()).length();
-    const center = box.getCenter(new THREE.Vector3());
-    root.position.x += (root.position.x - center.x);
-    root.position.y += (root.position.y - center.y);
+  // Center & scale model
+  const box = new THREE.Box3().setFromObject(root);
+  const center = box.getCenter(new THREE.Vector3());
+  root.position.x -= center.x;
+  root.position.y -= center.y;
+  root.position.z -= center.z;
+},
+onProgress,
+onError
 
-  }, onProgress, onError);
+);
 
-  // Resize
-  window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
+// Handle Resize
+window.addEventListener('resize', () => {
+camera.aspect = container.clientWidth / container.clientHeight;
+camera.updateProjectionMatrix();
+renderer.setSize(container.clientWidth, container.clientHeight);
+});
 
-  // basic RAF loop
-  let running = true;
-  document.addEventListener('visibilitychange', () => { running = document.visibilityState === 'visible'; });
+// Render Loop
+let running = true;
+document.addEventListener('visibilitychange', () => { running = document.visibilityState === 'visible'; });
 
-  function animate(){
-    if (running) requestAnimationFrame(animate);
-    renderer.render(scene, camera);
-  }
-  animate();
+function animate(){
+if(running) requestAnimationFrame(animate);
+renderer.render(scene, camera);
+}
+animate();
 })();
