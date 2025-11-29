@@ -1,111 +1,123 @@
 <!doctype html>
 <html lang="he">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Ima 3D — Test Public Model</title>
-  <style>
-    html, body { height:100%; margin:0; overflow:hidden; background:#111; }
-    #scene-container { width:100%; height:100vh; }
-    #overlay { position:absolute; top:12px; left:12px; z-index:20; color:#fff; font-family:system-ui; }
-    #loader { color:#ddd; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ima 3D — Auto Fallback Loader</title>
+<style>
+html, body { margin:0; padding:0; width:100%; height:100%; background:#111; overflow:hidden; }
+#scene-container { width:100%; height:100vh; }
+#overlay { position:absolute; top:12px; left:12px; color:#fff; font-family:system-ui; z-index:100; }
+#loader { color:#ddd; }
+</style>
 </head>
 <body>
-  <div id="scene-container"></div>
-  <div id="overlay"><div id="loader">טוען מודל ציבורי...</div></div>
+<div id="scene-container"></div>
+<div id="overlay"><div id="loader">טוען מודל אמא...</div></div>
 
-  <script type="module">
-    import * as THREE from 'https://unpkg.com/three@0.154.0/build/three.module.js';
-    import { GLTFLoader } from 'https://unpkg.com/three@0.154.0/examples/jsm/loaders/GLTFLoader.js';
-    import { DRACOLoader } from 'https://unpkg.com/three@0.154.0/examples/jsm/loaders/DRACOLoader.js';
-    import { OrbitControls } from 'https://unpkg.com/three@0.154.0/examples/jsm/controls/OrbitControls.js';
+<script type="module">
+import * as THREE from 'https://unpkg.com/three@0.154.0/build/three.module.js';
+import { GLTFLoader } from 'https://unpkg.com/three@0.154.0/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'https://unpkg.com/three@0.154.0/examples/jsm/loaders/DRACOLoader.js';
+import { OrbitControls } from 'https://unpkg.com/three@0.154.0/examples/jsm/controls/OrbitControls.js';
 
-    const container = document.getElementById('scene-container');
-    const overlayLoader = document.getElementById('loader');
+const container = document.getElementById('scene-container');
+const overlayLoader = document.getElementById('loader');
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.shadowMap.enabled = true;
-    container.appendChild(renderer.domElement);
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.shadowMap.enabled = true;
+container.appendChild(renderer.domElement);
 
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0f0f12);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0f0f12);
 
-    const camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
-    camera.position.set(0, 1.6, 3);
+const camera = new THREE.PerspectiveCamera(50, container.clientWidth/container.clientHeight, 0.1, 1000);
+camera.position.set(0,1.6,3);
 
-    const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.0);
-    hemi.position.set(0, 1, 0);
-    scene.add(hemi);
+const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.0);
+hemi.position.set(0,1,0);
+scene.add(hemi);
 
-    const dir = new THREE.DirectionalLight(0xffffff, 0.8);
-    dir.position.set(5, 10, 7.5);
-    dir.castShadow = true;
-    scene.add(dir);
+const dir = new THREE.DirectionalLight(0xffffff,0.8);
+dir.position.set(5,10,7.5);
+dir.castShadow = true;
+scene.add(dir);
 
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(0, 1.2, 0);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.update();
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0,1.2,0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.update();
 
-    // DRACO loader מה-CDN
-    const dracoLoader = new DRACOLoader();
-    dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/');
-    dracoLoader.setDecoderConfig({ type: 'js' });
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/');
+dracoLoader.setDecoderConfig({ type:'js' });
 
-    const loader = new GLTFLoader();
-    loader.setDRACOLoader(dracoLoader);
+const loader = new GLTFLoader();
+loader.setDRACOLoader(dracoLoader);
 
-    // מודל ציבורי זמני (Astronaut GLB)
-    const publicModelURL = 'https://modelviewer.dev/shared-assets/models/Astronaut.glb';
+// רשימת מודלים עם fallback
+const modelURLs = [
+  'https://cdn.get3dmodels.com/characters/full-body-female-low-poly/full-body-female-low-poly.glb',
+  'https://raw.githubusercontent.com/imaosglobal/Ima-3d-mom/main/assets/3DModel.glb',
+  'https://cdn.jsdelivr.net/gh/imaosglobal/Ima-3d-mom/assets/3DModel.glb'
+];
 
-    loader.load(
-      publicModelURL,
-      gltf => {
-        overlayLoader.style.display = 'none';
-        const root = gltf.scene || gltf.scenes[0];
-        root.traverse(node => {
-          if(node.isMesh){
-            node.castShadow = true;
-            node.receiveShadow = true;
-          }
-        });
-        scene.add(root);
+let currentIndex = 0;
 
-        // Center & scale model
-        const box = new THREE.Box3().setFromObject(root);
-        const center = box.getCenter(new THREE.Vector3());
-        root.position.sub(center);
-        const size = box.getSize(new THREE.Vector3());
-        const maxDim = Math.max(size.x, size.y, size.z);
-        if(maxDim > 2) root.scale.multiplyScalar(2 / maxDim);
-      },
-      xhr => {
-        if(xhr.lengthComputable){
-          overlayLoader.textContent = 'טוען מודל... ' + Math.floor(xhr.loaded / xhr.total * 100) + '%';
-        }
-      },
-      err => {
-        console.error('GLB load error:', err);
-        overlayLoader.textContent = 'שגיאה בטעינת המודל – בדוק Console / Network';
+function loadNextModel() {
+  if(currentIndex >= modelURLs.length){
+    overlayLoader.textContent = 'לא הצלחנו לטעון אף מודל אמא.';
+    return;
+  }
+
+  const url = modelURLs[currentIndex];
+  overlayLoader.textContent = `טוען מודל אמא ${currentIndex+1} מתוך ${modelURLs.length}...`;
+
+  loader.load(
+    url,
+    gltf => {
+      overlayLoader.style.display = 'none';
+      const root = gltf.scene || gltf.scenes[0];
+      root.traverse(node => { if(node.isMesh){ node.castShadow=true; node.receiveShadow=true; } });
+      scene.add(root);
+
+      const box = new THREE.Box3().setFromObject(root);
+      const center = box.getCenter(new THREE.Vector3());
+      root.position.sub(center);
+      const size = box.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x,size.y,size.z);
+      if(maxDim > 2) root.scale.multiplyScalar(2/maxDim);
+    },
+    xhr => {
+      if(xhr.lengthComputable){
+        overlayLoader.textContent = `טוען מודל ${currentIndex+1}... ${Math.floor(xhr.loaded/xhr.total*100)}%`;
       }
-    );
-
-    window.addEventListener('resize', () => {
-      camera.aspect = container.clientWidth / container.clientHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(container.clientWidth, container.clientHeight);
-    });
-
-    function animate() {
-      requestAnimationFrame(animate);
-      controls.update();
-      renderer.render(scene, camera);
+    },
+    err => {
+      console.warn(`טעינת מודל ${currentIndex+1} נכשלה:`, err);
+      currentIndex++;
+      loadNextModel(); // מעבר למודל הבא
     }
-    animate();
-  </script>
+  );
+}
+
+loadNextModel();
+
+window.addEventListener('resize', ()=>{
+  camera.aspect = container.clientWidth/container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+function animate(){
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene,camera);
+}
+animate();
+</script>
 </body>
 </html>
