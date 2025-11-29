@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Ima 3D — Public Model Loader</title>
+<title>Ima 3D — Robust Loader</title>
 <style>
 html, body { margin:0; padding:0; width:100%; height:100%; background:#111; overflow:hidden; }
 #scene-container { width:100%; height:100vh; }
@@ -18,6 +18,7 @@ html, body { margin:0; padding:0; width:100%; height:100%; background:#111; over
 <script type="module">
 import * as THREE from 'https://unpkg.com/three@0.154.0/build/three.module.js';
 import { GLTFLoader } from 'https://unpkg.com/three@0.154.0/examples/jsm/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'https://unpkg.com/three@0.154.0/examples/jsm/loaders/DRACOLoader.js';
 import { OrbitControls } from 'https://unpkg.com/three@0.154.0/examples/jsm/controls/OrbitControls.js';
 
 const container = document.getElementById('scene-container');
@@ -51,8 +52,11 @@ controls.dampingFactor = 0.05;
 controls.update();
 
 const loader = new GLTFLoader();
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/'); // fallback CDN
+loader.setDRACOLoader(dracoLoader);
 
-// רשימת מודלים ציבוריים של אמא (CDN/GitHub Pages) עם fallback
+// רשימת מודלים של אמא עם סדר טעינה
 const modelURLs = [
   'https://cdn.get3dmodels.com/characters/full-body-female-low-poly/full-body-female-low-poly.glb',
   'https://cdn.jsdelivr.net/gh/imaosglobal/Ima-3d-mom/assets/3DModel.glb'
@@ -63,11 +67,12 @@ let currentIndex = 0;
 function loadNextModel() {
   if(currentIndex >= modelURLs.length){
     overlayLoader.textContent = 'לא הצלחנו לטעון אף מודל אמא.';
+    console.warn('All models failed to load.');
     return;
   }
 
   const url = modelURLs[currentIndex];
-  overlayLoader.textContent = `טוען מודל אמא ${currentIndex+1} מתוך ${modelURLs.length}...`;
+  overlayLoader.textContent = `טוען מודל אמא ${currentIndex+1}/${modelURLs.length}...`;
 
   loader.load(
     url,
@@ -77,13 +82,14 @@ function loadNextModel() {
       root.traverse(node => { if(node.isMesh){ node.castShadow=true; node.receiveShadow=true; } });
       scene.add(root);
 
-      // מרכז ומקנה סקל
       const box = new THREE.Box3().setFromObject(root);
       const center = box.getCenter(new THREE.Vector3());
       root.position.sub(center);
       const size = box.getSize(new THREE.Vector3());
       const maxDim = Math.max(size.x,size.y,size.z);
       if(maxDim > 2) root.scale.multiplyScalar(2/maxDim);
+
+      console.log(`מודל ${currentIndex+1} נטען בהצלחה:`, url);
     },
     xhr => {
       if(xhr.lengthComputable){
@@ -93,7 +99,7 @@ function loadNextModel() {
     err => {
       console.warn(`טעינת מודל ${currentIndex+1} נכשלה:`, err);
       currentIndex++;
-      loadNextModel(); // מעבר למודל הבא
+      loadNextModel(); // עובר למודל הבא עד להצלחה
     }
   );
 }
