@@ -3,8 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Ima 3D — DRACO CDN</title>
-  <link rel="icon" href="assets/favicon.png">
+  <title>Ima 3D — Test Public Model</title>
   <style>
     html, body { height:100%; margin:0; overflow:hidden; background:#111; }
     #scene-container { width:100%; height:100vh; }
@@ -14,7 +13,7 @@
 </head>
 <body>
   <div id="scene-container"></div>
-  <div id="overlay"><div id="loader">טוען מודל...</div></div>
+  <div id="overlay"><div id="loader">טוען מודל ציבורי...</div></div>
 
   <script type="module">
     import * as THREE from 'https://unpkg.com/three@0.154.0/build/three.module.js';
@@ -52,48 +51,48 @@
     controls.dampingFactor = 0.05;
     controls.update();
 
-    // DRACO Loader מה-CDN (אין צורך בקבצים מקומיים)
+    // DRACO loader מה-CDN
     const dracoLoader = new DRACOLoader();
-    dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/'); // נטען ישירות מה-CDN
-    dracoLoader.setDecoderConfig({ type: 'js' }); // ניתן לשנות ל-'wasm' אם רוצים WASM
+    dracoLoader.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/');
+    dracoLoader.setDecoderConfig({ type: 'js' });
 
     const loader = new GLTFLoader();
     loader.setDRACOLoader(dracoLoader);
 
-    function load3DModel(path) {
-      loader.load(
-        path,
-        gltf => {
-          overlayLoader.style.display = 'none';
-          const root = gltf.scene || gltf.scenes[0];
-          root.traverse(node => {
-            if (node.isMesh) {
-              node.castShadow = true;
-              node.receiveShadow = true;
-            }
-          });
-          scene.add(root);
+    // מודל ציבורי זמני (Astronaut GLB)
+    const publicModelURL = 'https://modelviewer.dev/shared-assets/models/Astronaut.glb';
 
-          const box = new THREE.Box3().setFromObject(root);
-          const center = box.getCenter(new THREE.Vector3());
-          root.position.sub(center);
-          const size = box.getSize(new THREE.Vector3());
-          const maxDim = Math.max(size.x, size.y, size.z);
-          if (maxDim > 2) root.scale.multiplyScalar(2 / maxDim);
-        },
-        xhr => {
-          if (xhr.lengthComputable) {
-            overlayLoader.textContent = 'טוען מודל... ' + Math.floor(xhr.loaded / xhr.total * 100) + '%';
+    loader.load(
+      publicModelURL,
+      gltf => {
+        overlayLoader.style.display = 'none';
+        const root = gltf.scene || gltf.scenes[0];
+        root.traverse(node => {
+          if(node.isMesh){
+            node.castShadow = true;
+            node.receiveShadow = true;
           }
-        },
-        err => {
-          console.error('GLB load error:', err);
-          overlayLoader.textContent = 'שגיאה בטעינת המודל – בדוק Console / Network';
-        }
-      );
-    }
+        });
+        scene.add(root);
 
-    load3DModel('assets/3DModel.glb');
+        // Center & scale model
+        const box = new THREE.Box3().setFromObject(root);
+        const center = box.getCenter(new THREE.Vector3());
+        root.position.sub(center);
+        const size = box.getSize(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        if(maxDim > 2) root.scale.multiplyScalar(2 / maxDim);
+      },
+      xhr => {
+        if(xhr.lengthComputable){
+          overlayLoader.textContent = 'טוען מודל... ' + Math.floor(xhr.loaded / xhr.total * 100) + '%';
+        }
+      },
+      err => {
+        console.error('GLB load error:', err);
+        overlayLoader.textContent = 'שגיאה בטעינת המודל – בדוק Console / Network';
+      }
+    );
 
     window.addEventListener('resize', () => {
       camera.aspect = container.clientWidth / container.clientHeight;
