@@ -14,6 +14,7 @@ services:
         value: "server/journal.json"
       - key: NODE_ENV
         value: "production"
+
   - type: cron
     name: Ima-Journal-Worker
     schedule: "0 * * * *" # כל שעה
