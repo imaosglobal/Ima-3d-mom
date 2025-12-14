@@ -21,7 +21,8 @@
     .rtl { direction:rtl; text-align:right; }
     .ltr { direction:ltr; text-align:left; }
     #welcome { position:absolute; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#ffffff; z-index:20; }
-    #momImage { width:260px; border-radius:20px; margin-bottom:30px; }
+    #momImage { width:260px; border-radius:20px; margin-bottom:20px; }
+    #tizer { text-align:center; max-width:280px; margin-bottom:25px; font-size:1rem; color:#333; }
     #crash { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#300; color:#ffdede; z-index:999; justify-content:center; align-items:center; text-align:center; padding:20px; }
   </style>
 </head>
@@ -34,7 +35,15 @@
 </div>
 
 <div id="welcome">
-  <img id="momImage" src="mom.png" alt="Mom">
+  <!-- תמונת אמא מהתיקייה public -->
+  <img id="momImage" src="mom.jpg" alt="Mom">
+  
+  <!-- טיזר קצר ונייטרלי -->
+  <div id="tizer">
+    חוויות, מדיטציות ומשחקים אישיים שמחכים לך. התחבר/י עכשיו כדי להתחיל לדבר עם אמא.
+  </div>
+
+  <!-- Google Sign-In -->
   <div id="g_id_onload"
        data-client_id="1093623573018-6s23clvor9u80r08135aelfatuib3a55.apps.googleusercontent.com"
        data-callback="onSignIn"
