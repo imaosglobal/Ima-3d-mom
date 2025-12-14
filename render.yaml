@@ -6,3 +6,20 @@ services:
     branch: main
     buildCommand: npm install
     startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: GOOGLE_CLIENT_ID
+        value: "1093623573018-xxxx.apps.googleusercontent.com"
+      - key: JOURNAL_FILE
+        value: "server/journal.json"
+      - key: NODE_ENV
+        value: "production"
+  - type: cron
+    name: Ima-Journal-Worker
+    schedule: "0 * * * *" # כל שעה
+    command: "node server/worker.js"
+    envVars:
+      - key: JOURNAL_FILE
+        value: "server/journal.json"
+      - key: NODE_ENV
+        value: "production"
