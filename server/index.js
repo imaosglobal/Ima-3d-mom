@@ -1,4 +1,3 @@
-// server/index.js
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
@@ -7,7 +6,7 @@ import path from 'path';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const JOURNAL_FILE = process.env.JOURNAL_FILE || path.join(__dirname, 'journal.json');
+const JOURNAL_FILE = process.env.JOURNAL_FILE || path.join(process.cwd(), 'server/journal.json');
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -16,16 +15,17 @@ app.use(bodyParser.json());
 app.get('/log', (req, res) => {
   fs.readFile(JOURNAL_FILE, 'utf8', (err, data) => {
     if(err) return res.status(500).json({error: 'Failed to read journal'});
-    res.json(JSON.parse(data || '[]'));
+    res.json(JSON.parse(data || '{"entries":[],"lastUpdated":null}'));
   });
 });
 
 // הוספת רשומה חדשה
 app.post('/log', (req, res) => {
   fs.readFile(JOURNAL_FILE, 'utf8', (err, data) => {
-    const logs = data ? JSON.parse(data) : [];
-    logs.push({ ...req.body, timestamp: new Date().toISOString() });
-    fs.writeFile(JOURNAL_FILE, JSON.stringify(logs, null, 2), err => {
+    const journal = data ? JSON.parse(data) : {entries:[], lastUpdated:null};
+    journal.entries.push({...req.body, timestamp: new Date().toISOString()});
+    journal.lastUpdated = new Date().toISOString();
+    fs.writeFile(JOURNAL_FILE, JSON.stringify(journal, null, 2), err => {
       if(err) return res.status(500).json({error:'Failed to write journal'});
       res.json({status:'ok'});
     });
@@ -33,6 +33,6 @@ app.post('/log', (req, res) => {
 });
 
 // יצירת הקובץ אם לא קיים
-if(!fs.existsSync(JOURNAL_FILE)) fs.writeFileSync(JOURNAL_FILE, '[]');
+if(!fs.existsSync(JOURNAL_FILE)) fs.writeFileSync(JOURNAL_FILE, '{"entries":[],"lastUpdated":null}');
 
 app.listen(PORT, () => console.log(`Ima Journal server running on port ${PORT}`));
