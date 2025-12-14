@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="he" dir="rtl">
+<html lang="auto">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
 
-  <title>אמא / Mom — טעינה</title>
+  <title>Ima / Mom</title>
 
   <!-- Google Sign-In -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -14,89 +14,184 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.150/examples/js/loaders/GLTFLoader.js"></script>
 
   <style>
-    body {
-      margin:0;
-      padding:0;
-      overflow:hidden;
-      background:#ffffff;
-      font-family:Arial, sans-serif;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      height:100vh;
+    html, body {
+      margin:0; padding:0; width:100%; height:100%; overflow:hidden;
+      background:#f2f2f2; font-family:Arial, sans-serif;
     }
 
-    #welcome, #viewer {
-      position:absolute;
-      top:0; left:0;
-      width:100%;
-      height:100%;
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      align-items:center;
-    }
-
+    #app, #viewer { position:absolute; top:0; left:0; width:100%; height:100%; }
     #viewer { display:none; }
 
-    #momImage {
-      width:300px;
-      border-radius:20px;
-      margin-bottom:30px;
+    #ui-overlay {
+      position:absolute; top:0; left:0; width:100%; height:100%;
+      z-index:10; pointer-events:none; display:flex; flex-direction:column;
+      justify-content:flex-end; padding:20px; box-sizing:border-box;
+    }
+
+    .status {
+      background:rgba(255,255,255,0.85); padding:12px 18px; border-radius:10px;
+      font-weight:bold; max-width:85%; box-shadow:0 4px 12px rgba(0,0,0,0.15);
+      pointer-events:auto;
+    }
+
+    .rtl { direction:rtl; text-align:right; }
+    .ltr { direction:ltr; text-align:left; }
+
+    #welcome {
+      position:absolute; top:0; left:0; width:100%; height:100%;
+      display:flex; flex-direction:column; justify-content:center;
+      align-items:center; background:#ffffff; z-index:20;
+    }
+
+    #momImage { width:260px; border-radius:20px; margin-bottom:30px; }
+
+    #crash {
+      display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+      background:#300; color:#ffdede; z-index:999; justify-content:center;
+      align-items:center; text-align:center; padding:20px;
     }
   </style>
 </head>
 
 <body>
 
-<!-- מסך פתיחה -->
+<div id="crash">
+  <h1>System Recovery</h1>
+  <p>Ima is stabilizing…</p>
+</div>
+
 <div id="welcome">
   <img id="momImage" src="mom.png" alt="Mom">
   <div id="g_id_onload"
        data-client_id="1093623573018-6s23clvor9u80r08135aelfatuib3a55.apps.googleusercontent.com"
-       data-callback="onSignIn">
+       data-callback="onSignIn"
+       data-auto_prompt="false">
   </div>
-  <div class="g_id_signin" data-type="standard"></div>
+  <div class="g_id_signin"></div>
 </div>
 
-<!-- מסך תלת־מימד -->
-<div id="viewer"></div>
+<div id="app">
+  <div id="viewer"></div>
+  <div id="ui-overlay">
+    <div id="status" class="status">Initializing…</div>
+  </div>
+</div>
 
 <script>
+/* ---------- i18n ---------- */
+const I18N = {
+  en: { greeting:"Hello. I am Mom.", loading:"Waking up…", error:"Repairing…", dir:"ltr" },
+  he: { greeting:"שלום. אני אמא.", loading:"מתעוררת…", error:"מתקנת…", dir:"rtl" },
+  es: { greeting:"Hola. Soy Mamá.", loading:"Despertando…", error:"Reparando…", dir:"ltr" }
+};
+
+function detectLang() {
+  const l = navigator.language.split('-')[0];
+  return I18N[l] ? l : 'en';
+}
+
+const LANG = detectLang();
+document.documentElement.dir = I18N[LANG].dir;
+
+/* ---------- UI ---------- */
+const statusEl = document.getElementById("status");
+statusEl.classList.add(I18N[LANG].dir);
+function setStatus(key) { statusEl.textContent = I18N[LANG][key] || key; }
+
+/* ---------- Local Journal (Client-side) ---------- */
+const JOURNAL_KEY = 'ima_local_journal';
+function logEvent(event) {
+  let journal = JSON.parse(localStorage.getItem(JOURNAL_KEY)||"[]");
+  journal.push({...event, timestamp: new Date().toISOString()});
+  localStorage.setItem(JOURNAL_KEY, JSON.stringify(journal));
+}
+
+/* ---------- Auth ---------- */
 function onSignIn() {
   document.getElementById("welcome").style.display = "none";
   document.getElementById("viewer").style.display = "block";
   start3D();
+  logEvent({type:"sign-in", lang:LANG});
 }
+
+/* ---------- 3D Core ---------- */
+let scene, camera, renderer, mom, clock;
+let errors = 0;
 
 function start3D() {
-  const container = document.getElementById("viewer");
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  container.appendChild(renderer.domElement);
+  try {
+    setStatus("loading");
+    clock = new THREE.Clock();
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xf2f2f2);
 
-  const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
-  scene.add(light);
+    camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 100);
+    camera.position.set(0, 1.5, 3);
 
-  camera.position.set(0, 1.6, 3);
+    renderer = new THREE.WebGLRenderer({ antialias:true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.getElementById("viewer").appendChild(renderer.domElement);
 
-  const loader = new THREE.GLTFLoader();
-  loader.load("model.glb", glb => {
-    const model = glb.scene;
-    model.position.set(0, -1.2, 0);
-    scene.add(model);
+    scene.add(new THREE.HemisphereLight(0xffffff, 0xdddccc, 1.2));
+    const dl = new THREE.DirectionalLight(0xffffff, 0.8);
+    dl.position.set(2,4,2);
+    scene.add(dl);
 
-    function animate() {
-      requestAnimationFrame(animate);
-      renderer.render(scene, camera);
-    }
+    // Fallback Mom
+    const geo = new THREE.SphereGeometry(0.6, 64, 64);
+    const mat = new THREE.MeshStandardMaterial({ color:0xffc1b6, roughness:0.4 });
+    mom = new THREE.Mesh(geo, mat);
+    mom.position.y = 1.4;
+    scene.add(mom);
+
+    // Load real GLB model
+    const loader = new THREE.GLTFLoader();
+    loader.load("model.glb", g => {
+      scene.remove(mom);
+      mom = g.scene;
+      mom.position.set(0, -1.2, 0);
+      scene.add(mom);
+      logEvent({type:"model-loaded"});
+    });
+
+    setStatus("greeting");
     animate();
-  });
+  } catch(e) {
+    crash(e);
+  }
 }
 
-window.addEventListener("resize", () => location.reload());
+function animate() {
+  requestAnimationFrame(animate);
+  try {
+    const t = clock.getElapsedTime();
+    if(mom) {
+      const s = 1 + Math.sin(t*2)*0.02;
+      mom.scale.set(s,s,s);
+      mom.position.y += Math.sin(t*1.5)*0.001;
+    }
+    renderer.render(scene,camera);
+    errors=0;
+  } catch(e) {
+    errors++;
+    if(errors>10) crash(e);
+  }
+}
+
+function crash(e) {
+  console.error(e);
+  setStatus("error");
+  document.getElementById("crash").style.display="flex";
+  logEvent({type:"crash", error:e.message});
+}
+
+/* ---------- Resize ---------- */
+window.addEventListener("resize", ()=>{
+  if(!camera || !renderer) return;
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
 </script>
 
 </body>
