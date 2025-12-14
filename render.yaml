@@ -17,7 +17,7 @@ services:
 
   - type: cron
     name: Ima-Journal-Worker
-    schedule: "0 * * * *" # כל שעה
+    schedule: "*/1 * * * *" # כל דקה
     command: "node server/worker.js"
     envVars:
       - key: JOURNAL_FILE
