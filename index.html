@@ -50,7 +50,7 @@
   </div>
 </div>
 
-<script type="module">
+<script>
 /* ---------- i18n ---------- */
 const I18N = {
   en: { greeting:"Hello. I am Mom.", loading:"Waking up…", error:"Repairing…", dir:"ltr" },
@@ -67,7 +67,7 @@ function setStatus(key) { statusEl.textContent = I18N[LANG][key]||key; }
 
 /* ---------- Global Journal (Server) ---------- */
 function logEvent(event){
-  fetch('https://ima-journal-server.onrender.com/log', { // <--- כתובת השרת שלך
+  fetch('https://ima-journal-server.onrender.com/log', {
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify(event)
@@ -83,9 +83,6 @@ function onSignIn() {
 }
 
 /* ---------- 3D Core ---------- */
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-
 let scene, camera, renderer, mom, clock;
 let errors=0;
 
@@ -116,10 +113,10 @@ function start3D(){
     scene.add(mom);
 
     // Load GLB model
-    const loader=new GLTFLoader();
-    loader.load("model.glb",g=>{
+    const loader = new THREE.GLTFLoader();
+    loader.load("model.glb", g => {
       scene.remove(mom);
-      mom=g.scene;
+      mom = g.scene;
       mom.position.set(0,-1.2,0);
       scene.add(mom);
       logEvent({type:"model-loaded"});
