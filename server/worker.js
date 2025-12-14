@@ -1,36 +1,15 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
-const JOURNAL_FILE = process.env.JOURNAL_FILE || path.join(__dirname, 'journal.json');
+const JOURNAL_FILE = process.env.JOURNAL_FILE || path.join(process.cwd(), 'server/journal.json');
 
-function loadJournal() {
-  try {
-    if (!fs.existsSync(JOURNAL_FILE)) return [];
-    const data = fs.readFileSync(JOURNAL_FILE, 'utf-8');
-    return JSON.parse(data);
-  } catch (e) {
-    console.error('Error loading journal:', e);
-    return [];
-  }
+function updateJournal() {
+  if(!fs.existsSync(JOURNAL_FILE)) fs.writeFileSync(JOURNAL_FILE, '{"entries":[],"lastUpdated":null}');
+  const data = fs.readFileSync(JOURNAL_FILE, 'utf8');
+  const journal = data ? JSON.parse(data) : {entries:[], lastUpdated:null};
+  journal.lastUpdated = new Date().toISOString();
+  fs.writeFileSync(JOURNAL_FILE, JSON.stringify(journal, null, 2));
+  console.log('Journal updated at', new Date().toISOString());
 }
 
-function saveJournal(journal) {
-  try {
-    fs.writeFileSync(JOURNAL_FILE, JSON.stringify(journal, null, 2), 'utf-8');
-  } catch (e) {
-    console.error('Error saving journal:', e);
-  }
-}
-
-// כאן ניתן להוסיף עיבוד אירועים חדשים או סינכרון ממקורות אחרים
-function processEvents() {
-  const journal = loadJournal();
-
-  // דוגמה: הוספת אירוע "heartbeat" כל דקה
-  journal.push({ type: 'heartbeat', time: new Date().toISOString() });
-
-  saveJournal(journal);
-  console.log('Journal updated, total entries:', journal.length);
-}
-
-processEvents();
+updateJournal();
