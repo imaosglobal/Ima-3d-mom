@@ -3,7 +3,6 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-
   <title>Ima / Mom</title>
 
   <!-- Google Sign-In -->
@@ -14,35 +13,16 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.150/examples/js/loaders/GLTFLoader.js"></script>
 
   <style>
-    html, body {
-      margin:0; padding:0; width:100%; height:100%; overflow:hidden;
-      background:#f2f2f2; font-family:Arial, sans-serif;
-    }
+    html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#f2f2f2; font-family:Arial, sans-serif; }
     #app, #viewer { position:absolute; top:0; left:0; width:100%; height:100%; }
     #viewer { display:none; }
-    #ui-overlay {
-      position:absolute; top:0; left:0; width:100%; height:100%;
-      z-index:10; pointer-events:none; display:flex; flex-direction:column;
-      justify-content:flex-end; padding:20px; box-sizing:border-box;
-    }
-    .status {
-      background:rgba(255,255,255,0.85); padding:12px 18px; border-radius:10px;
-      font-weight:bold; max-width:85%; box-shadow:0 4px 12px rgba(0,0,0,0.15);
-      pointer-events:auto;
-    }
+    #ui-overlay { position:absolute; top:0; left:0; width:100%; height:100%; z-index:10; pointer-events:none; display:flex; flex-direction:column; justify-content:flex-end; padding:20px; box-sizing:border-box; }
+    .status { background:rgba(255,255,255,0.85); padding:12px 18px; border-radius:10px; font-weight:bold; max-width:85%; box-shadow:0 4px 12px rgba(0,0,0,0.15); pointer-events:auto; }
     .rtl { direction:rtl; text-align:right; }
     .ltr { direction:ltr; text-align:left; }
-    #welcome {
-      position:absolute; top:0; left:0; width:100%; height:100%;
-      display:flex; flex-direction:column; justify-content:center;
-      align-items:center; background:#ffffff; z-index:20;
-    }
+    #welcome { position:absolute; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#ffffff; z-index:20; }
     #momImage { width:260px; border-radius:20px; margin-bottom:30px; }
-    #crash {
-      display:none; position:fixed; top:0; left:0; width:100%; height:100%;
-      background:#300; color:#ffdede; z-index:999; justify-content:center;
-      align-items:center; text-align:center; padding:20px;
-    }
+    #crash { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#300; color:#ffdede; z-index:999; justify-content:center; align-items:center; text-align:center; padding:20px; }
   </style>
 </head>
 
@@ -70,15 +50,14 @@
   </div>
 </div>
 
-<script>
+<script type="module">
 /* ---------- i18n ---------- */
 const I18N = {
   en: { greeting:"Hello. I am Mom.", loading:"Waking up…", error:"Repairing…", dir:"ltr" },
   he: { greeting:"שלום. אני אמא.", loading:"מתעוררת…", error:"מתקנת…", dir:"rtl" },
   es: { greeting:"Hola. Soy Mamá.", loading:"Despertando…", error:"Reparando…", dir:"ltr" }
 };
-function detectLang() { const l = navigator.language.split('-')[0]; return I18N[l]?l:'en'; }
-const LANG = detectLang();
+const LANG = (() => { const l=navigator.language.split('-')[0]; return I18N[l]?l:'en'; })();
 document.documentElement.dir = I18N[LANG].dir;
 
 /* ---------- UI ---------- */
@@ -88,7 +67,7 @@ function setStatus(key) { statusEl.textContent = I18N[LANG][key]||key; }
 
 /* ---------- Global Journal (Server) ---------- */
 function logEvent(event){
-  fetch('https://yourserver.com/log', { // <-- שנה לכתובת השרת שלך
+  fetch('https://ima-journal-server.onrender.com/log', { // <--- כתובת השרת שלך
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify(event)
@@ -104,10 +83,13 @@ function onSignIn() {
 }
 
 /* ---------- 3D Core ---------- */
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+
 let scene, camera, renderer, mom, clock;
 let errors=0;
 
-function start3D() {
+function start3D(){
   try {
     setStatus("loading");
     clock=new THREE.Clock();
@@ -121,7 +103,7 @@ function start3D() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.getElementById("viewer").appendChild(renderer.domElement);
 
-    scene.add(new THREE.HemisphereLight(0xffffff, 0xdddccc,1.2));
+    scene.add(new THREE.HemisphereLight(0xffffff,0xdddccc,1.2));
     const dl=new THREE.DirectionalLight(0xffffff,0.8);
     dl.position.set(2,4,2);
     scene.add(dl);
@@ -134,7 +116,7 @@ function start3D() {
     scene.add(mom);
 
     // Load GLB model
-    const loader=new THREE.GLTFLoader();
+    const loader=new GLTFLoader();
     loader.load("model.glb",g=>{
       scene.remove(mom);
       mom=g.scene;
