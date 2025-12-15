@@ -1,55 +1,87 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="he">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>אמא / Mom</title>
 
-<!-- Google Identity Services -->
+<!-- Google Sign-In -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 
-<!-- ThreeJS -->
-<script type="module" src="main.js"></script>
+<!-- ThreeJS Module -->
+<script type="module" src="./main.js"></script>
 
 <style>
-html,body{
+html, body {
   margin:0; padding:0; width:100%; height:100%;
-  font-family:system-ui, Arial; background:#f4f5f7; overflow:hidden;
+  font-family: system-ui, Arial;
+  background: #f4f5f7;
+  overflow:hidden;
 }
 
-/* ---------- Welcome ---------- */
-#welcome{
+/* Welcome screen */
+#welcome {
   position:fixed; inset:0;
   display:flex; flex-direction:column; justify-content:center; align-items:center;
-  background:linear-gradient(180deg,#ffffff,#eef1f5); z-index:20;
-}
-#welcome img{
-  width:240px; border-radius:24px; box-shadow:0 20px 50px rgba(0,0,0,.15);
-}
-#welcome h1{margin:16px 0 4px; font-size:1.6rem;}
-#welcome p{margin:0 0 20px;color:#555;font-size:1rem;}
-#welcome button{
-  padding:12px 24px; border:none; border-radius:20px;
-  background:#4285f4; color:white; font-size:1rem; cursor:pointer;
-  box-shadow:0 6px 20px rgba(0,0,0,.15);
-  margin-top:12px;
+  background: linear-gradient(180deg,#ffffff,#eef1f5);
+  z-index:20;
+  transition: opacity 0.8s;
 }
 
-/* ---------- App ---------- */
-#app,#viewer{position:absolute; inset:0;}
-#viewer{display:none;}
-#ui{position:absolute; inset:0; display:none; pointer-events:none; z-index:10;}
-#speech{position:absolute; bottom:140px; right:30px; max-width:320px;
-  background:white; padding:18px 22px; border-radius:22px;
-  box-shadow:0 15px 40px rgba(0,0,0,.2); font-size:1rem;
-  opacity:0; transition:.4s;}
-#speech.show{opacity:1;}
-#chat{position:absolute; bottom:30px; right:30px; display:flex; gap:10px; pointer-events:auto;}
-#chat input{padding:14px 18px; border-radius:20px; border:none; width:220px; box-shadow:0 8px 20px rgba(0,0,0,.15);}
-#chat button{border:none; border-radius:20px; padding:14px 18px; background:#000; color:white;}
-#share{position:absolute; top:20px; left:20px; pointer-events:auto; background:white; padding:10px 14px; border-radius:14px; box-shadow:0 8px 20px rgba(0,0,0,.15); font-size:.85rem;}
-#logout{position:absolute; top:20px; right:20px; pointer-events:auto; background:white; padding:10px 14px; border-radius:14px; box-shadow:0 8px 20px rgba(0,0,0,.15); font-size:.85rem; cursor:pointer;}
-#crash{display:none; position:fixed; inset:0; background:#200; color:#ffdede; z-index:999; justify-content:center; align-items:center; text-align:center;}
+#welcome.hide { opacity:0; pointer-events:none; }
+
+#welcome img { width:240px; border-radius:24px; box-shadow:0 20px 50px rgba(0,0,0,.15); margin-bottom:16px; }
+#welcome h1 { margin:0 0 4px; }
+#welcome p { margin:0 0 20px; color:#555; }
+#welcome small { margin-top:14px; color:#666; }
+
+/* App / 3D Viewer */
+#app, #viewer { position:absolute; inset:0; }
+#viewer { display:none; }
+
+#ui {
+  position:absolute; inset:0;
+  display:none;
+  pointer-events:none;
+  z-index:10;
+}
+
+#speech {
+  position:absolute; bottom:140px; right:30px; max-width:320px;
+  background:white; padding:18px 22px; border-radius:22px; box-shadow:0 15px 40px rgba(0,0,0,.2);
+  font-size:1rem; opacity:0; transition:opacity .4s;
+}
+#speech.show { opacity:1; }
+
+#chat {
+  position:absolute; bottom:30px; right:30px; display:flex; gap:10px; pointer-events:auto;
+}
+#chat input {
+  padding:14px 18px; border-radius:20px; border:none; width:220px;
+  box-shadow:0 8px 20px rgba(0,0,0,.15);
+}
+#chat button {
+  border:none; border-radius:20px; padding:14px 18px; background:#000; color:white;
+}
+
+/* Share */
+#share {
+  position:absolute; top:20px; left:20px; pointer-events:auto;
+  background:white; padding:10px 14px; border-radius:14px;
+  box-shadow:0 8px 20px rgba(0,0,0,.15); font-size:.85rem;
+  cursor:pointer;
+}
+
+/* Sign Out / User */
+#userArea { position:absolute; top:20px; right:20px; display:flex; align-items:center; gap:10px; }
+#userPic { width:40px; height:40px; border-radius:50%; object-fit:cover; }
+#signoutBtn { padding:6px 12px; border-radius:12px; border:none; background:#333; color:white; cursor:pointer; }
+
+/* Crash */
+#crash {
+  display:none; position:fixed; inset:0; background:#200; color:#ffdede;
+  z-index:999; justify-content:center; align-items:center; text-align:center;
+}
 </style>
 </head>
 
@@ -62,82 +94,85 @@ html,body{
   </div>
 </div>
 
-<!-- ---------- WELCOME ---------- -->
+<!-- Welcome -->
 <div id="welcome">
-  <img src="server/public/mom.jpg">
+  <img src="server/public/mom.jpg" alt="Mom Logo">
   <h1>אמא</h1>
   <p>מרחב אישי, רגשי וחי</p>
-  <div id="gSignInDiv"></div>
+
+  <div id="g_id_onload"
+       data-client_id="1093623573018-6s23clvor9u80r08135aelfatuib3a55.apps.googleusercontent.com"
+       data-callback="handleCredentialResponse"
+       data-auto_prompt="false"></div>
+  <div class="g_id_signin"></div>
+
+  <small>אפשר להתחיל לדבר</small>
 </div>
 
-<!-- ---------- APP ---------- -->
+<!-- App -->
 <div id="app">
   <div id="viewer"></div>
+
   <div id="ui">
     <div id="speech"></div>
+
     <div id="chat">
-      <input id="userInput" placeholder="אפשר לכתוב כאן…">
+      <input id="userInput" placeholder="כתוב כאן…">
       <button onclick="send()">שליחה</button>
     </div>
+
     <div id="share" onclick="share()">לשתף את אמא</div>
-    <div id="logout" onclick="logout()">התנתקות</div>
+
+    <div id="userArea">
+      <img id="userPic" src="" alt="User">
+      <button id="signoutBtn">התנתק</button>
+    </div>
   </div>
 </div>
 
 <script type="module">
 import { Mom3D } from './main.js';
 
-/* ================ GOOGLE SIGN-IN ================= */
-let currentUser = null;
-function handleCredentialResponse(response){
-  // משתמש מחובר
-  currentUser = response; 
-  showApp();
-}
+window.handleCredentialResponse = function(response) {
+  const payload = JSON.parse(atob(response.credential.split(".")[1]));
+  const name = payload.name;
+  const picture = payload.picture;
 
-function showApp(){
-  document.getElementById("welcome").style.display="none";
+  // Show Welcome fade out
+  const welcome = document.getElementById("welcome");
+  welcome.classList.add("hide");
+  setTimeout(()=>welcome.style.display="none", 800);
+
+  // Show Viewer and UI
   document.getElementById("viewer").style.display="block";
   document.getElementById("ui").style.display="block";
+
+  // Show user picture
+  const userPic = document.getElementById("userPic");
+  userPic.src = picture;
+
+  // Initialize 3D Mom
   Mom3D.init();
-  MomSay("אני כאן. אפשר להתחיל.");
+
+  MomSay(`שלום ${name}, אני כאן. אפשר להתחיל.`);
   setTimeout(()=>MomSay("מה שלומך עכשיו?"),6000);
-}
+};
 
-function logout(){
-  google.accounts.id.disableAutoSelect();
-  currentUser = null;
-  document.getElementById("welcome").style.display="flex";
-  document.getElementById("viewer").style.display="none";
-  document.getElementById("ui").style.display="none";
-  MomSay("התנתקת.");
-  // מחזיר את הכפתור
-  google.accounts.id.initialize({
-    client_id: '1093623573018-6s23clvor9u80r08135aelfatuib3a55.apps.googleusercontent.com',
-    callback: handleCredentialResponse,
-    auto_select:false
-  });
-  google.accounts.id.renderButton(
-    document.getElementById("gSignInDiv"),
-    { theme:"outline", size:"large", text:"signin_with" }
-  );
-}
-
-/* ---------- CHAT & SPEECH ---------- */
-function MomSay(text){
-  const s=document.getElementById("speech");
+// Chat functions
+window.MomSay = function(text){
+  const s = document.getElementById("speech");
   s.textContent=text;
   s.classList.add("show");
   setTimeout(()=>s.classList.remove("show"),7000);
-}
+};
 
-function send(){
-  const input=document.getElementById("userInput");
-  const text=input.value.trim();
+window.send = function(){
+  const input = document.getElementById("userInput");
+  const text = input.value.trim();
   if(!text) return;
   input.value="";
   MomSay(reply(text));
-}
+};
 
 function reply(t){
   if(t.includes("קשה")) return "אני שומעת. אפשר לקחת רגע ביחד.";
@@ -145,23 +180,18 @@ function reply(t){
   return "אני איתך. אפשר להמשיך.";
 }
 
-function share(){
+// Share
+window.share = function(){
   const url = location.origin+"?ref=mom";
   navigator.clipboard.writeText(url);
   MomSay("הקישור הועתק. אפשר לשתף כשמרגיש נכון.");
-}
+};
 
-/* ================ INITIALIZE GOOGLE BUTTON ================ */
-google.accounts.id.initialize({
-  client_id: '1093623573018-6s23clvor9u80r08135aelfatuib3a55.apps.googleusercontent.com',
-  callback: handleCredentialResponse,
-  auto_select:false
+// Sign out
+document.getElementById("signoutBtn").addEventListener("click",()=>{
+  google.accounts.id.disableAutoSelect();
+  location.reload();
 });
-google.accounts.id.renderButton(
-  document.getElementById("gSignInDiv"),
-  { theme:"outline", size:"large", text:"signin_with" }
-);
-google.accounts.id.prompt(); // מראה כפתור במידת הצורך
 </script>
 
 </body>
