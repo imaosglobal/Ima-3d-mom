@@ -5,17 +5,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Mom</title>
 
-<!-- Google Sign-In -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-
-<!-- Mom3D -->
 <script type="module" src="./main.js"></script>
 
 <style>
 html,body{
   margin:0; padding:0; width:100%; height:100%;
   font-family:system-ui, Arial;
-  background:linear-gradient(180deg,#eef1f5,#cfd8e3);
+  background:#f4f5f7;
   overflow:hidden;
 }
 
@@ -26,32 +23,38 @@ html,body{
   flex-direction:column;
   justify-content:center;
   align-items:center;
+  background:linear-gradient(180deg,#ffffff,#eef1f5);
   z-index:20;
-  transition: opacity .5s ease;
 }
 #welcome img{
   width:240px;
   border-radius:24px;
   box-shadow:0 20px 50px rgba(0,0,0,.15);
-  margin-bottom:16px;
 }
-#welcome h1{margin:0; font-size:2rem}
-#welcome p{margin:8px 0 20px;color:#555; text-align:center;}
-#welcome small{margin-top:14px;color:#666; text-align:center;}
+#welcome h1{margin:16px 0 4px}
+#welcome p{margin:0 0 20px;color:#555}
+#welcome small{margin-top:14px;color:#666}
+#welcome button{
+  margin-top:12px;
+  padding:10px 16px;
+  border:none;
+  border-radius:16px;
+  background:#000;
+  color:#fff;
+  cursor:pointer;
+}
 
-/* ---------- Viewer ---------- */
-#app,#viewer{
-  position:absolute; inset:0;
-}
+/* ---------- App ---------- */
+#app,#viewer{position:absolute; inset:0}
 #viewer{display:none}
 
-/* ---------- UI ---------- */
 #ui{
   position:absolute; inset:0;
   display:none;
   pointer-events:none;
   z-index:10;
 }
+
 #speech{
   position:absolute;
   bottom:140px;
@@ -67,7 +70,6 @@ html,body{
 }
 #speech.show{opacity:1}
 
-/* ---------- Chat ---------- */
 #chat{
   position:absolute;
   bottom:30px;
@@ -91,7 +93,6 @@ html,body{
   color:white;
 }
 
-/* ---------- Share ---------- */
 #share{
   position:absolute;
   top:20px;
@@ -119,7 +120,6 @@ html,body{
 </head>
 
 <body>
-
 <div id="crash">
   <div>
     <h2>אמא מתייצבת…</h2>
@@ -135,22 +135,26 @@ html,body{
 
   <div id="g_id_onload"
     data-client_id="1093623573018-6s23clvor9u80r08135aelfatuib3a55.apps.googleusercontent.com"
-    data-callback="onSignIn"
+    data-callback="handleCredentialResponse"
     data-auto_prompt="false"></div>
   <div class="g_id_signin"></div>
 
   <small>אפשר להתחיל לדבר עם אמא</small>
+  <button id="logoutBtn" onclick="logout()" style="display:none">התנתק / שנה חשבון</button>
 </div>
 
 <!-- ---------- APP ---------- -->
 <div id="app">
   <div id="viewer"></div>
+
   <div id="ui">
     <div id="speech"></div>
+
     <div id="chat">
       <input id="userInput" placeholder="אפשר לכתוב כאן…">
       <button onclick="send()">שליחה</button>
     </div>
+
     <div id="share" onclick="share()">לשתף את אמא</div>
   </div>
 </div>
@@ -158,16 +162,30 @@ html,body{
 <script type="module">
 import { Mom3D } from './main.js';
 
-function onSignIn(){
-  document.getElementById("welcome").style.opacity="0";
-  setTimeout(()=>{
-    document.getElementById("welcome").style.display="none";
-    document.getElementById("viewer").style.display="block";
-    document.getElementById("ui").style.display="block";
-    Mom3D.init();
-    MomSay("אני כאן. אפשר להתחיל.");
-    setTimeout(()=>MomSay("מה שלומך עכשיו?"),6000);
-  },500);
+let currentUser = null;
+
+function handleCredentialResponse(response){
+  const id_token = response.credential;
+  currentUser = id_token; // אפשר להרחיב עם jwt-decode בעתיד
+  console.log("Signed in:", currentUser);
+
+  document.getElementById("welcome").style.display="none";
+  document.getElementById("viewer").style.display="block";
+  document.getElementById("ui").style.display="block";
+  document.getElementById("logoutBtn").style.display="block";
+
+  Mom3D.init();
+  MomSay("אני כאן. אפשר להתחיל.");
+  setTimeout(()=>MomSay("מה שלומך עכשיו?"),6000);
+}
+
+function logout(){
+  google.accounts.id.disableAutoSelect();
+  currentUser = null;
+  document.getElementById("welcome").style.display="flex";
+  document.getElementById("viewer").style.display="none";
+  document.getElementById("ui").style.display="none";
+  document.getElementById("logoutBtn").style.display="none";
 }
 
 /* ================= CHAT ================= */
@@ -182,7 +200,7 @@ function send(){
   const input = document.getElementById("userInput");
   const text = input.value.trim();
   if(!text) return;
-  input.value="";
+  input.value = "";
   MomSay(reply(text));
 }
 
@@ -198,8 +216,12 @@ function share(){
   navigator.clipboard.writeText(url);
   MomSay("הקישור הועתק. אפשר לשתף כשמרגיש נכון.");
 }
-window.onSignIn = onSignIn;
-</script>
 
+window.handleCredentialResponse = handleCredentialResponse;
+window.logout = logout;
+window.MomSay = MomSay;
+window.send = send;
+window.share = share;
+</script>
 </body>
 </html>
