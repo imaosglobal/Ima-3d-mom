@@ -1,1 +1,43 @@
 
+<script type="module">
+import { Mom3D } from './main.js';
+
+function onSignIn(){
+    document.getElementById("welcome").style.display="none";
+    document.getElementById("viewer").style.display="block";
+    document.getElementById("ui").style.display="block";
+
+    Mom3D.init();
+    MomSay("אני כאן. אפשר להתחיל.");
+    setTimeout(()=>MomSay("מה שלומך עכשיו?"),6000);
+}
+
+/* ================= CHAT ================= */
+function MomSay(text){
+    const s = document.getElementById("speech");
+    s.textContent = text;
+    s.classList.add("show");
+    setTimeout(()=>s.classList.remove("show"),7000);
+}
+
+function send(){
+    const input = document.getElementById("userInput");
+    const text = input.value.trim();
+    if(!text) return;
+    input.value = "";
+    MomSay(reply(text));
+}
+
+function reply(t){
+    if(t.includes("קשה")) return "אני שומעת. אפשר לקחת רגע ביחד.";
+    if(t.includes("טוב")) return "נעים לשמוע. אפשר להישאר עם זה.";
+    return "אני איתך. אפשר להמשיך.";
+}
+
+/* ================= SHARE ================= */
+function share(){
+    const url = location.origin+"?ref=mom";
+    navigator.clipboard.writeText(url);
+    MomSay("הקישור הועתק. אפשר לשתף כשמרגיש נכון.");
+}
+</script>
