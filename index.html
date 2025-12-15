@@ -5,9 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>אמא / Mom</title>
 
-<!-- Google Sign-In -->
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-
 <!-- ThreeJS -->
 <script type="module" src="./main.js"></script>
 
@@ -21,110 +18,118 @@ html,body{
 #welcome{
   position:fixed; inset:0;
   display:flex; flex-direction:column; justify-content:center; align-items:center;
-  background:linear-gradient(180deg,#ffffff,#eef1f5); z-index:20; transition:opacity .6s;
+  background:linear-gradient(180deg,#ffffff,#eef1f5);
+  z-index:20; transition:opacity .5s;
 }
 #welcome.hide{opacity:0; pointer-events:none;}
-#welcome img{width:240px; border-radius:24px; box-shadow:0 20px 50px rgba(0,0,0,.15);}
+#welcome img{
+  width:220px; border-radius:24px;
+  box-shadow:0 20px 50px rgba(0,0,0,.15);
+}
 #welcome h1{margin:16px 0 4px;}
 #welcome p{margin:0 0 20px;color:#555;}
-#welcome small{margin-top:14px;color:#666;}
+
+#welcome button{
+  padding:14px 22px;
+  border-radius:20px;
+  border:none;
+  background:#000;
+  color:#fff;
+  font-size:1rem;
+  cursor:pointer;
+}
 
 /* ---------- App ---------- */
-#app,#viewer{position:absolute; inset:0;}
-#viewer{display:none;}
-#ui{position:absolute; inset:0; display:none; pointer-events:none; z-index:10;}
+#viewer{position:absolute; inset:0; display:none;}
+#ui{position:absolute; inset:0; display:none; pointer-events:none;}
+
 #speech{
   position:absolute; bottom:140px; right:30px; max-width:320px;
   background:white; padding:18px 22px; border-radius:22px;
-  box-shadow:0 15px 40px rgba(0,0,0,.2); font-size:1rem;
+  box-shadow:0 15px 40px rgba(0,0,0,.2);
   opacity:0; transition:.4s;
 }
 #speech.show{opacity:1;}
+
 #chat{
-  position:absolute; bottom:30px; right:30px; display:flex; gap:10px; pointer-events:auto;
+  position:absolute; bottom:30px; right:30px;
+  display:flex; gap:10px; pointer-events:auto;
 }
-#chat input{padding:14px 18px; border-radius:20px; border:none; width:220px; box-shadow:0 8px 20px rgba(0,0,0,.15);}
-#chat button{border:none; border-radius:20px; padding:14px 18px; background:#000; color:white; cursor:pointer;}
-#share{position:absolute; top:20px; left:20px; pointer-events:auto; background:white; padding:10px 14px; border-radius:14px; box-shadow:0 8px 20px rgba(0,0,0,.15); font-size:.85rem; cursor:pointer;}
+#chat input{
+  padding:14px 18px; border-radius:20px;
+  border:none; width:220px;
+}
+#chat button{
+  border:none; border-radius:20px;
+  padding:14px 18px; background:#000; color:white;
+}
 
-/* ---------- Logout ---------- */
-#logout{position:absolute; top:20px; right:20px; pointer-events:auto; background:white; padding:10px 14px; border-radius:14px; box-shadow:0 8px 20px rgba(0,0,0,.15); font-size:.85rem; cursor:pointer; display:none;}
-
-/* ---------- Crash ---------- */
-#crash{
-  display:none; position:fixed; inset:0;
-  background:#200; color:#ffdede; z-index:999;
-  justify-content:center; align-items:center; text-align:center;
+#logout{
+  position:absolute; top:20px; right:20px;
+  pointer-events:auto;
+  background:white; padding:10px 14px;
+  border-radius:14px;
+  cursor:pointer;
+  display:none;
 }
 </style>
 </head>
 
 <body>
 
-<div id="crash">
-  <div>
-    <h2>אמא מתייצבת…</h2>
-    <p>עוד רגע חוזרים</p>
-  </div>
-</div>
-
 <!-- ---------- WELCOME ---------- -->
 <div id="welcome">
   <img src="server/public/mom.jpg" alt="אמא">
   <h1>אמא</h1>
   <p>מרחב אישי, רגשי וחי</p>
-
-  <div id="g_id_onload"
-    data-client_id="1093623573018-6s23clvor9u80r08135aelfatuib3a55.apps.googleusercontent.com"
-    data-login_uri=""
-    data-callback="onSignIn"
-    data-auto_prompt="false"
-    data-cancel_on_tap_outside="true"
-    data-itp_support="true">
-  </div>
-  <div class="g_id_signin"></div>
-
-  <small>אפשר להתחיל לדבר עם אמא</small>
+  <button onclick="login()">כניסה עם Google</button>
 </div>
 
 <!-- ---------- APP ---------- -->
-<div id="app">
-  <div id="viewer"></div>
+<div id="viewer"></div>
 
-  <div id="ui">
-    <div id="speech"></div>
+<div id="ui">
+  <div id="speech"></div>
 
-    <div id="chat">
-      <input id="userInput" placeholder="אפשר לכתוב כאן…">
-      <button onclick="send()">שליחה</button>
-    </div>
-
-    <div id="share" onclick="share()">לשתף את אמא</div>
-    <div id="logout" onclick="signOut()">התנתק/י</div>
+  <div id="chat">
+    <input id="userInput" placeholder="אפשר לכתוב כאן…">
+    <button onclick="send()">שליחה</button>
   </div>
+
+  <div id="logout" onclick="logout()">התנתק/י</div>
 </div>
 
 <script type="module">
 import { Mom3D } from './main.js';
 
-let currentUserId=null;
-
 /* ================= AUTH ================= */
-window.onSignIn = function(credentialResponse){
-  // Decode credential to get sub
-  const data = JSON.parse(atob(credentialResponse.credential.split('.')[1]));
-  currentUserId = data.sub;
 
-  // Hide welcome, show app
-  document.getElementById("welcome").classList.add("hide");
-  document.getElementById("viewer").style.display="block";
-  document.getElementById("ui").style.display="block";
-  document.getElementById("logout").style.display="block";
+// בדיקת session בטעינה
+fetch('/me')
+  .then(r => r.json())
+  .then(user => {
+    if(user.loggedIn) enterApp();
+  });
+
+window.login = function(){
+  // מעבר מלא לשרת (מאפשר בחירת חשבון)
+  location.href = '/auth/google';
+}
+
+window.logout = function(){
+  fetch('/logout',{method:'POST'})
+    .then(()=>location.reload());
+}
+
+function enterApp(){
+  document.getElementById('welcome').classList.add('hide');
+  document.getElementById('viewer').style.display='block';
+  document.getElementById('ui').style.display='block';
+  document.getElementById('logout').style.display='block';
 
   Mom3D.init();
   MomSay("אני כאן. אפשר להתחיל.");
-  setTimeout(()=>MomSay("מה שלומך עכשיו?"),6000);
-};
+}
 
 /* ================= CHAT ================= */
 window.MomSay = function(text){
@@ -135,37 +140,11 @@ window.MomSay = function(text){
 }
 
 window.send = function(){
-  const input = document.getElementById("userInput");
-  const text = input.value.trim();
-  if(!text) return;
-  input.value = "";
-  MomSay(reply(text));
-}
-
-function reply(t){
-  if(t.includes("קשה")) return "אני שומעת. אפשר לקחת רגע ביחד.";
-  if(t.includes("טוב")) return "נעים לשמוע. אפשר להישאר עם זה.";
-  return "אני איתך. אפשר להמשיך.";
-}
-
-/* ================= SHARE ================= */
-window.share = function(){
-  const url = location.origin+"?ref=mom";
-  navigator.clipboard.writeText(url);
-  MomSay("הקישור הועתק. אפשר לשתף כשמרגיש נכון.");
-}
-
-/* ================= LOGOUT ================= */
-window.signOut = function(){
-  if(!currentUserId) return;
-  google.accounts.id.revoke(currentUserId, done=>{
-    currentUserId=null;
-    document.getElementById("logout").style.display="none";
-    document.getElementById("viewer").style.display="none";
-    document.getElementById("ui").style.display="none";
-    document.getElementById("welcome").classList.remove("hide");
-    MomSay("התנתקת/י בהצלחה.");
-  });
+  const i = document.getElementById("userInput");
+  const t = i.value.trim();
+  if(!t) return;
+  i.value="";
+  MomSay("אני איתך.");
 }
 </script>
 
