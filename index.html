@@ -3,76 +3,117 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>אמא / Mom</title>
+<title>Mom</title>
 
 <!-- Google Sign-In -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 
-<!-- ThreeJS -->
+<!-- Mom3D -->
 <script type="module" src="./main.js"></script>
 
 <style>
-html, body {
+html,body{
   margin:0; padding:0; width:100%; height:100%;
   font-family:system-ui, Arial;
-  background:#f4f5f7; overflow:hidden;
+  background:linear-gradient(180deg,#eef1f5,#cfd8e3);
+  overflow:hidden;
 }
 
 /* ---------- Welcome ---------- */
-#welcome {
+#welcome{
   position:fixed; inset:0;
-  display:flex; flex-direction:column;
-  justify-content:center; align-items:center;
-  background:linear-gradient(180deg,#ffffff,#eef1f5);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
   z-index:20;
+  transition: opacity .5s ease;
 }
-#welcome img {
-  width:240px; border-radius:24px; box-shadow:0 20px 50px rgba(0,0,0,.15);
+#welcome img{
+  width:240px;
+  border-radius:24px;
+  box-shadow:0 20px 50px rgba(0,0,0,.15);
   margin-bottom:16px;
 }
-#welcome h1 { margin:0; font-size:1.6rem; }
-#welcome p { margin:4px 0 20px; color:#555; font-size:1rem; text-align:center; }
-#welcome small { color:#666; font-size:.9rem; margin-top:12px; }
+#welcome h1{margin:0; font-size:2rem}
+#welcome p{margin:8px 0 20px;color:#555; text-align:center;}
+#welcome small{margin-top:14px;color:#666; text-align:center;}
 
-/* ---------- App ---------- */
-#app,#viewer { position:absolute; inset:0; }
-#viewer { display:none; }
-#ui { position:absolute; inset:0; display:none; pointer-events:none; z-index:10; }
-
-/* ---------- Speech Bubble ---------- */
-#speech {
-  position:absolute; bottom:140px; right:30px;
-  max-width:320px; background:white; padding:18px 22px;
-  border-radius:22px; box-shadow:0 15px 40px rgba(0,0,0,.2);
-  font-size:1rem; opacity:0; transition:.4s;
+/* ---------- Viewer ---------- */
+#app,#viewer{
+  position:absolute; inset:0;
 }
-#speech.show { opacity:1; }
+#viewer{display:none}
+
+/* ---------- UI ---------- */
+#ui{
+  position:absolute; inset:0;
+  display:none;
+  pointer-events:none;
+  z-index:10;
+}
+#speech{
+  position:absolute;
+  bottom:140px;
+  right:30px;
+  max-width:320px;
+  background:white;
+  padding:18px 22px;
+  border-radius:22px;
+  box-shadow:0 15px 40px rgba(0,0,0,.2);
+  font-size:1rem;
+  opacity:0;
+  transition:.4s;
+}
+#speech.show{opacity:1}
 
 /* ---------- Chat ---------- */
-#chat {
-  position:absolute; bottom:30px; right:30px;
-  display:flex; gap:10px; pointer-events:auto;
+#chat{
+  position:absolute;
+  bottom:30px;
+  right:30px;
+  display:flex;
+  gap:10px;
+  pointer-events:auto;
 }
-#chat input {
-  padding:14px 18px; border-radius:20px; border:none; width:220px;
+#chat input{
+  padding:14px 18px;
+  border-radius:20px;
+  border:none;
+  width:220px;
   box-shadow:0 8px 20px rgba(0,0,0,.15);
 }
-#chat button {
-  border:none; border-radius:20px; padding:14px 18px; background:#000; color:white;
+#chat button{
+  border:none;
+  border-radius:20px;
+  padding:14px 18px;
+  background:#000;
+  color:white;
 }
 
 /* ---------- Share ---------- */
-#share {
-  position:absolute; top:20px; left:20px; pointer-events:auto;
-  background:white; padding:10px 14px; border-radius:14px;
-  box-shadow:0 8px 20px rgba(0,0,0,.15); font-size:.85rem;
+#share{
+  position:absolute;
+  top:20px;
+  left:20px;
+  pointer-events:auto;
+  background:white;
+  padding:10px 14px;
+  border-radius:14px;
+  box-shadow:0 8px 20px rgba(0,0,0,.15);
+  font-size:.85rem;
 }
 
 /* ---------- Crash ---------- */
-#crash {
-  display:none; position:fixed; inset:0;
-  background:#200; color:#ffdede; z-index:999;
-  justify-content:center; align-items:center; text-align:center;
+#crash{
+  display:none;
+  position:fixed; inset:0;
+  background:#200;
+  color:#ffdede;
+  z-index:999;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
 }
 </style>
 </head>
@@ -104,21 +145,32 @@ html, body {
 <!-- ---------- APP ---------- -->
 <div id="app">
   <div id="viewer"></div>
-
   <div id="ui">
     <div id="speech"></div>
-
     <div id="chat">
       <input id="userInput" placeholder="אפשר לכתוב כאן…">
       <button onclick="send()">שליחה</button>
     </div>
-
     <div id="share" onclick="share()">לשתף את אמא</div>
   </div>
 </div>
 
 <script type="module">
-// ================= CHAT & UI =================
+import { Mom3D } from './main.js';
+
+function onSignIn(){
+  document.getElementById("welcome").style.opacity="0";
+  setTimeout(()=>{
+    document.getElementById("welcome").style.display="none";
+    document.getElementById("viewer").style.display="block";
+    document.getElementById("ui").style.display="block";
+    Mom3D.init();
+    MomSay("אני כאן. אפשר להתחיל.");
+    setTimeout(()=>MomSay("מה שלומך עכשיו?"),6000);
+  },500);
+}
+
+/* ================= CHAT ================= */
 function MomSay(text){
   const s = document.getElementById("speech");
   s.textContent = text;
@@ -130,7 +182,7 @@ function send(){
   const input = document.getElementById("userInput");
   const text = input.value.trim();
   if(!text) return;
-  input.value = "";
+  input.value="";
   MomSay(reply(text));
 }
 
@@ -140,24 +192,13 @@ function reply(t){
   return "אני איתך. אפשר להמשיך.";
 }
 
+/* ================= SHARE ================= */
 function share(){
   const url = location.origin+"?ref=mom";
   navigator.clipboard.writeText(url);
   MomSay("הקישור הועתק. אפשר לשתף כשמרגיש נכון.");
 }
-
-// ================= GOOGLE SIGN-IN =================
-import { Mom3D } from './main.js';
-
-window.onSignIn = function(){
-  document.getElementById("welcome").style.display="none";
-  document.getElementById("viewer").style.display="block";
-  document.getElementById("ui").style.display="block";
-
-  Mom3D.init();
-  MomSay("אני כאן. אפשר להתחיל.");
-  setTimeout(()=>MomSay("מה שלומך עכשיו?"),6000);
-};
+window.onSignIn = onSignIn;
 </script>
 
 </body>
