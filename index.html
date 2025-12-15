@@ -16,8 +16,6 @@ html,body{
   margin:0; padding:0; width:100%; height:100%;
   font-family:system-ui, Arial; background:#f4f5f7; overflow:hidden;
 }
-
-/* ---------- Welcome ---------- */
 #welcome{
   position:fixed; inset:0;
   display:flex; flex-direction:column; justify-content:center; align-items:center;
@@ -28,32 +26,20 @@ html,body{
 #welcome h1{margin:16px 0 4px;}
 #welcome p{margin:0 0 20px;color:#555;}
 #welcome small{margin-top:14px;color:#666;}
-
-/* ---------- App ---------- */
 #app,#viewer{position:absolute; inset:0;}
 #viewer{display:none;}
 #ui{position:absolute; inset:0; display:none; pointer-events:none; z-index:10;}
-#speech{
-  position:absolute; bottom:140px; right:30px; max-width:320px;
+#speech{position:absolute; bottom:140px; right:30px; max-width:320px;
   background:white; padding:18px 22px; border-radius:22px;
   box-shadow:0 15px 40px rgba(0,0,0,.2); font-size:1rem;
-  opacity:0; transition:.4s;
-}
+  opacity:0; transition:.4s;}
 #speech.show{opacity:1;}
-#chat{
-  position:absolute; bottom:30px; right:30px; display:flex; gap:10px; pointer-events:auto;
-}
+#chat{position:absolute; bottom:30px; right:30px; display:flex; gap:10px; pointer-events:auto;}
 #chat input{padding:14px 18px; border-radius:20px; border:none; width:220px; box-shadow:0 8px 20px rgba(0,0,0,.15);}
 #chat button{border:none; border-radius:20px; padding:14px 18px; background:#000; color:white; cursor:pointer;}
 #share{position:absolute; top:20px; left:20px; pointer-events:auto; background:white; padding:10px 14px; border-radius:14px; box-shadow:0 8px 20px rgba(0,0,0,.15); font-size:.85rem; cursor:pointer;}
 #logout{position:absolute; top:20px; right:20px; pointer-events:auto; background:white; padding:10px 14px; border-radius:14px; box-shadow:0 8px 20px rgba(0,0,0,.15); font-size:.85rem; cursor:pointer; display:none;}
-
-/* ---------- Crash ---------- */
-#crash{
-  display:none; position:fixed; inset:0;
-  background:#200; color:#ffdede; z-index:999;
-  justify-content:center; align-items:center; text-align:center;
-}
+#crash{display:none; position:fixed; inset:0; background:#200; color:#ffdede; z-index:999; justify-content:center; align-items:center; text-align:center;}
 </style>
 </head>
 
@@ -66,7 +52,6 @@ html,body{
   </div>
 </div>
 
-<!-- ---------- WELCOME ---------- -->
 <div id="welcome">
   <img src="server/public/mom.jpg" alt="אמא">
   <h1>אמא</h1>
@@ -85,18 +70,14 @@ html,body{
   <small>אפשר להתחיל לדבר עם אמא</small>
 </div>
 
-<!-- ---------- APP ---------- -->
 <div id="app">
   <div id="viewer"></div>
-
   <div id="ui">
     <div id="speech"></div>
-
     <div id="chat">
       <input id="userInput" placeholder="אפשר לכתוב כאן…">
       <button onclick="send()">שליחה</button>
     </div>
-
     <div id="share" onclick="share()">לשתף את אמא</div>
     <div id="logout" onclick="signOut()">התנתק/י</div>
   </div>
@@ -117,7 +98,6 @@ function showApp() {
   viewerEl.style.display = "block";
   uiEl.style.display = "block";
   logoutEl.style.display = "block";
-
   Mom3D.init();
   MomSay("אני כאן. אפשר להתחיל.");
   setTimeout(() => MomSay("מה שלומך עכשיו?"), 6000);
@@ -128,6 +108,7 @@ function showWelcome() {
   viewerEl.style.display = "none";
   uiEl.style.display = "none";
   logoutEl.style.display = "none";
+  if(google?.accounts?.id) google.accounts.id.prompt();
 }
 
 /* ===== MomSay / Chat ===== */
@@ -165,7 +146,7 @@ window.signOut = async function(){
   currentUser = null;
   showWelcome();
   MomSay("התנתקת/י בהצלחה.");
-  google.accounts.id.disableAutoSelect();
+  if(google?.accounts?.id) google.accounts.id.disableAutoSelect();
 }
 
 /* ===== Google Sign-In Callback ===== */
@@ -185,11 +166,13 @@ window.onSignIn = async function(credentialResponse){
   }
 }
 
-/* ===== Check session on load ===== */
+/* ===== Check session on load + fallback timeout ===== */
 (async function init(){
   try{
+    const fallback = setTimeout(()=>{ if(!currentUser) showWelcome(); },5000);
     const meResp = await fetch('/me',{credentials:'include'});
     const data = await meResp.json();
+    clearTimeout(fallback);
     if(data.loggedIn){
       currentUser = data.user;
       showApp();
