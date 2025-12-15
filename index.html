@@ -3,49 +3,62 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Mom / אמא</title>
+<title>אמא / Mom</title>
 
+<!-- Google Sign-In -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<script type="module" src="main.js"></script>
+
+<!-- ThreeJS -->
+<script type="module" src="./main.js"></script>
 
 <style>
-html, body { margin:0; padding:0; width:100%; height:100%; font-family:system-ui, Arial; overflow:hidden; }
-
-/* Gradient Background */
-body{ background:linear-gradient(180deg,#f0f4f8,#d9e2ec); }
-
-/* Welcome Screen */
-#welcome{
-  position:fixed; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center;
-  text-align:center; z-index:20; transition:opacity .6s ease;
+html,body{
+  margin:0; padding:0; width:100%; height:100%;
+  font-family:system-ui, Arial; background:#f4f5f7; overflow:hidden;
 }
-#welcome img{ width:220px; border-radius:24px; box-shadow:0 20px 50px rgba(0,0,0,.15); margin-bottom:20px;}
-#welcome h1{margin:0 0 8px; font-size:2.2rem; color:#333;}
-#welcome p{margin:0 0 20px; color:#555; font-size:1rem;}
-#welcome small{margin-top:12px; color:#666; display:block;}
-#welcome #googleBtn{margin-top:16px;}
 
-/* App / Viewer */
+/* ---------- Welcome ---------- */
+#welcome{
+  position:fixed; inset:0;
+  display:flex; flex-direction:column; justify-content:center; align-items:center;
+  background:linear-gradient(180deg,#ffffff,#eef1f5); z-index:20; transition:opacity .6s;
+}
+#welcome.hide{opacity:0; pointer-events:none;}
+#welcome img{width:240px; border-radius:24px; box-shadow:0 20px 50px rgba(0,0,0,.15);}
+#welcome h1{margin:16px 0 4px;}
+#welcome p{margin:0 0 20px;color:#555;}
+#welcome small{margin-top:14px;color:#666;}
+
+/* ---------- App ---------- */
 #app,#viewer{position:absolute; inset:0;}
 #viewer{display:none;}
-
-/* UI Overlay */
 #ui{position:absolute; inset:0; display:none; pointer-events:none; z-index:10;}
 #speech{
-  position:absolute; bottom:140px; right:30px; max-width:320px; background:white; padding:18px 22px;
-  border-radius:22px; box-shadow:0 15px 40px rgba(0,0,0,.2); font-size:1rem; opacity:0; transition:.4s;
+  position:absolute; bottom:140px; right:30px; max-width:320px;
+  background:white; padding:18px 22px; border-radius:22px;
+  box-shadow:0 15px 40px rgba(0,0,0,.2); font-size:1rem;
+  opacity:0; transition:.4s;
 }
 #speech.show{opacity:1;}
-#chat{position:absolute; bottom:30px; right:30px; display:flex; gap:10px; pointer-events:auto;}
+#chat{
+  position:absolute; bottom:30px; right:30px; display:flex; gap:10px; pointer-events:auto;
+}
 #chat input{padding:14px 18px; border-radius:20px; border:none; width:220px; box-shadow:0 8px 20px rgba(0,0,0,.15);}
 #chat button{border:none; border-radius:20px; padding:14px 18px; background:#000; color:white; cursor:pointer;}
 #share{position:absolute; top:20px; left:20px; pointer-events:auto; background:white; padding:10px 14px; border-radius:14px; box-shadow:0 8px 20px rgba(0,0,0,.15); font-size:.85rem; cursor:pointer;}
-#signoutBtn{position:absolute; top:20px; right:20px; pointer-events:auto; padding:10px 14px; border-radius:14px; background:#f33; color:white; border:none; cursor:pointer; display:none; font-weight:600;}
 
-/* Crash Screen */
-#crash{display:none; position:fixed; inset:0; background:#200; color:#ffdede; z-index:999; justify-content:center; align-items:center; text-align:center;}
+/* ---------- Logout ---------- */
+#logout{position:absolute; top:20px; right:20px; pointer-events:auto; background:white; padding:10px 14px; border-radius:14px; box-shadow:0 8px 20px rgba(0,0,0,.15); font-size:.85rem; cursor:pointer; display:none;}
+
+/* ---------- Crash ---------- */
+#crash{
+  display:none; position:fixed; inset:0;
+  background:#200; color:#ffdede; z-index:999;
+  justify-content:center; align-items:center; text-align:center;
+}
 </style>
 </head>
+
 <body>
 
 <div id="crash">
@@ -55,39 +68,73 @@ body{ background:linear-gradient(180deg,#f0f4f8,#d9e2ec); }
   </div>
 </div>
 
-<!-- Welcome Screen -->
+<!-- ---------- WELCOME ---------- -->
 <div id="welcome">
-  <img src="server/public/mom.jpg" alt="Mom Logo">
+  <img src="server/public/mom.jpg" alt="אמא">
   <h1>אמא</h1>
   <p>מרחב אישי, רגשי וחי</p>
-  <div id="googleBtn"></div>
+
+  <div id="g_id_onload"
+    data-client_id="1093623573018-6s23clvor9u80r08135aelfatuib3a55.apps.googleusercontent.com"
+    data-login_uri=""
+    data-callback="onSignIn"
+    data-auto_prompt="false"
+    data-cancel_on_tap_outside="true"
+    data-itp_support="true">
+  </div>
+  <div class="g_id_signin"></div>
+
   <small>אפשר להתחיל לדבר עם אמא</small>
 </div>
 
-<!-- App / 3D -->
+<!-- ---------- APP ---------- -->
 <div id="app">
   <div id="viewer"></div>
+
   <div id="ui">
     <div id="speech"></div>
+
     <div id="chat">
       <input id="userInput" placeholder="אפשר לכתוב כאן…">
       <button onclick="send()">שליחה</button>
     </div>
+
     <div id="share" onclick="share()">לשתף את אמא</div>
-    <button id="signoutBtn">התנתקות</button>
+    <div id="logout" onclick="signOut()">התנתק/י</div>
   </div>
 </div>
 
 <script type="module">
-// ==================== Mom Chat ====================
-function MomSay(text){
+import { Mom3D } from './main.js';
+
+let currentUserId=null;
+
+/* ================= AUTH ================= */
+window.onSignIn = function(credentialResponse){
+  // Decode credential to get sub
+  const data = JSON.parse(atob(credentialResponse.credential.split('.')[1]));
+  currentUserId = data.sub;
+
+  // Hide welcome, show app
+  document.getElementById("welcome").classList.add("hide");
+  document.getElementById("viewer").style.display="block";
+  document.getElementById("ui").style.display="block";
+  document.getElementById("logout").style.display="block";
+
+  Mom3D.init();
+  MomSay("אני כאן. אפשר להתחיל.");
+  setTimeout(()=>MomSay("מה שלומך עכשיו?"),6000);
+};
+
+/* ================= CHAT ================= */
+window.MomSay = function(text){
   const s = document.getElementById("speech");
   s.textContent = text;
   s.classList.add("show");
   setTimeout(()=>s.classList.remove("show"),7000);
 }
 
-function send(){
+window.send = function(){
   const input = document.getElementById("userInput");
   const text = input.value.trim();
   if(!text) return;
@@ -101,58 +148,26 @@ function reply(t){
   return "אני איתך. אפשר להמשיך.";
 }
 
-function share(){
+/* ================= SHARE ================= */
+window.share = function(){
   const url = location.origin+"?ref=mom";
   navigator.clipboard.writeText(url);
   MomSay("הקישור הועתק. אפשר לשתף כשמרגיש נכון.");
 }
 
-// ==================== Google Sign-In ====================
-google.accounts.id.initialize({
-  client_id: "1093623573018-6s23clvor9u80r08135aelfatuib3a55.apps.googleusercontent.com",
-  callback: handleCredentialResponse,
-  auto_select: false
-});
-
-google.accounts.id.renderButton(
-  document.getElementById("googleBtn"),
-  { theme:"filled_blue", size:"large" }
-);
-
-function handleCredentialResponse(response){
-  const payload = JSON.parse(atob(response.credential.split(".")[1]));
-  const name = payload.name || "משתמש";
-  const picture = payload.picture || "";
-
-  // Fade out Welcome, show App
-  const welcome = document.getElementById("welcome");
-  welcome.style.opacity = 0;
-  setTimeout(()=>{
-    welcome.style.display = "none";
-    document.getElementById("viewer").style.display = "block";
-    document.getElementById("ui").style.display = "block";
-  },600);
-
-  // Initialize 3D Mom
-  import('./main.js').then(({Mom3D})=>{
-    Mom3D.init();
+/* ================= LOGOUT ================= */
+window.signOut = function(){
+  if(!currentUserId) return;
+  google.accounts.id.revoke(currentUserId, done=>{
+    currentUserId=null;
+    document.getElementById("logout").style.display="none";
+    document.getElementById("viewer").style.display="none";
+    document.getElementById("ui").style.display="none";
+    document.getElementById("welcome").classList.remove("hide");
+    MomSay("התנתקת/י בהצלחה.");
   });
-
-  MomSay(`שלום ${name}, אני כאן. אפשר להתחיל.`);
-
-  // Show Sign-out
-  const btn = document.getElementById("signoutBtn");
-  btn.style.display = "block";
-  btn.onclick = ()=>{
-    google.accounts.id.disableAutoSelect();
-    location.reload();
-  }
-}
-
-// Force account selection if needed
-function chooseAccountAgain(){
-  google.accounts.id.prompt();
 }
 </script>
+
 </body>
 </html>
