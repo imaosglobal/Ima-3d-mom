@@ -5,13 +5,7 @@ function initScene(container) {
   }
 
   const scene = new THREE.Scene();
-
-  const camera = new THREE.PerspectiveCamera(
-    60,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000
-  );
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
   camera.position.z = 4;
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -19,11 +13,10 @@ function initScene(container) {
   renderer.setPixelRatio(window.devicePixelRatio);
   container.appendChild(renderer.domElement);
 
-  // תאורה רכה
   const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
   scene.add(light);
 
-  // אובייקט זמני (כדור לבדיקה)
+  // אובייקט זמני / להחליף ב-mom.glb בעתיד
   const geometry = new THREE.SphereGeometry(1, 32, 32);
   const material = new THREE.MeshStandardMaterial({ color: 0xffd1dc });
   const sphere = new THREE.Mesh(geometry, material);
@@ -37,14 +30,12 @@ function initScene(container) {
 
   animate();
 
-  // התאמה לחלון
   window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
 
-  // טקסט מצב
   const status = document.createElement('div');
   status.textContent = 'אמא נטענת — מערכת פעילה';
   status.style.position = 'absolute';
