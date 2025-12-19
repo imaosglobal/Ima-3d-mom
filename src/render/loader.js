@@ -1,6 +1,4 @@
-(function () {
-  const container = document.getElementById('canvas-container');
-
+function initScene(container) {
   if (!container) {
     console.error('canvas-container not found');
     return;
@@ -14,7 +12,6 @@
     0.1,
     1000
   );
-
   camera.position.z = 4;
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -26,7 +23,7 @@
   const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
   scene.add(light);
 
-  // אובייקט זמני (בדיקה!)
+  // אובייקט זמני (כדור לבדיקה)
   const geometry = new THREE.SphereGeometry(1, 32, 32);
   const material = new THREE.MeshStandardMaterial({ color: 0xffd1dc });
   const sphere = new THREE.Mesh(geometry, material);
@@ -47,7 +44,7 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
 
-  // טקסט מצב (fallback)
+  // טקסט מצב
   const status = document.createElement('div');
   status.textContent = 'אמא נטענת — מערכת פעילה';
   status.style.position = 'absolute';
@@ -56,4 +53,4 @@
   status.style.color = '#e5e7eb';
   status.style.opacity = '0.8';
   container.appendChild(status);
-})();
+}
