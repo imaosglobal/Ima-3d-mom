@@ -7,13 +7,26 @@
 </head>
 <body>
 
-  <div id="canvas-container"></div>
+  <!-- דף פתיחה -->
+  <div id="landing-page">
+    <h2 class="welcome-text">שלום, אני אמא שלך</h2>
+    <div id="g_id_signin"></div>
+    <button id="guest-button">כניסה כאורח</button>
+  </div>
 
-  <!-- Three.js מה-CDN -->
+  <!-- דף ראשי -->
+  <div id="main-page" class="hidden">
+    <div id="canvas-container"></div>
+  </div>
+
+  <!-- Three.js -->
   <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
 
-  <!-- הקוד שלך -->
+  <!-- Loader/Rander -->
   <script src="src/render/loader.js"></script>
+
+  <!-- Google Sign-In + כניסה כאורח -->
+  <script src="src/auth/google-signin.js"></script>
 
 </body>
 </html>
