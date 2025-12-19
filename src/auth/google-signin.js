@@ -1,19 +1,20 @@
 window.onload = function () {
-  google.accounts.id.disableAutoSelect(); // מבטל חשבון אוטומטי
+  const landing = document.getElementById('landing-page');
+  const main = document.getElementById('main-page');
+  const canvasContainer = document.getElementById('canvas-container');
+
+  // Google Sign-In
+  google.accounts.id.disableAutoSelect(); 
 
   function handleCredentialResponse(response) {
-    console.log("JWT token:", response.credential); // בדיקה
+    console.log("JWT token:", response.credential);
     localStorage.setItem('userToken', response.credential);
-
-    const landing = document.getElementById('landing-page');
-    const main = document.getElementById('main-page');
 
     if (landing && main) {
       landing.classList.add('hidden');
       main.classList.remove('hidden');
     }
 
-    const canvasContainer = document.getElementById('canvas-container');
     if (canvasContainer && typeof initScene === 'function') {
       initScene(canvasContainer);
     }
@@ -30,5 +31,17 @@ window.onload = function () {
     { theme: 'outline', size: 'large' }
   );
 
-  google.accounts.id.prompt(); // force prompt תמיד
+  google.accounts.id.prompt(); 
+
+  // כניסה כאורח
+  const guestBtn = document.getElementById('guest-button');
+  guestBtn.addEventListener('click', () => {
+    if (landing && main) {
+      landing.classList.add('hidden');
+      main.classList.remove('hidden');
+    }
+    if (canvasContainer && typeof initScene === 'function') {
+      initScene(canvasContainer);
+    }
+  });
 };
