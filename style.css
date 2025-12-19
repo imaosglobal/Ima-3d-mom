@@ -1,3 +1,5 @@
+/* ===== בסיס קיים (לא שונה) ===== */
+
 body {
   margin: 0;
   font-family: 'Inter', sans-serif;
@@ -104,4 +106,26 @@ button:hover {
   font-size: 1.2rem;
   font-weight: 600;
   margin-bottom: 10px;
+}
+
+/* ===== תוספת קריטית ל-Three.js (חדש) ===== */
+
+#canvas-container {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none; /* מאפשר לחצנים מעל */
+}
+
+#canvas-container canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+/* מוודא שה-UI תמיד מעל הרנדר */
+#landing-page,
+#main-page {
+  position: relative;
+  z-index: 1;
 }
