@@ -8,6 +8,10 @@ export const Mom3D = {
     mom: null,
     clock: null,
     emotion: "neutral",
+    hemiLight: null,
+    dirLight: null,
+    auraLight: null,
+
     init() {
         this.clock = new THREE.Clock();
         this.scene = new THREE.Scene();
@@ -20,11 +24,17 @@ export const Mom3D = {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         document.getElementById("viewer").appendChild(this.renderer.domElement);
 
-        const hemi = new THREE.HemisphereLight(0xffffff,0xdddccc,1.2);
-        this.scene.add(hemi);
-        const dir = new THREE.DirectionalLight(0xffffff,0.8);
-        dir.position.set(2,4,2);
-        this.scene.add(dir);
+        // Lights
+        this.hemiLight = new THREE.HemisphereLight(0xffffff,0xdddccc,1.2);
+        this.scene.add(this.hemiLight);
+        this.dirLight = new THREE.DirectionalLight(0xffffff,0.8);
+        this.dirLight.position.set(2,4,2);
+        this.scene.add(this.dirLight);
+
+        // Soft Aura Light
+        this.auraLight = new THREE.PointLight(0xffe0b2, 0.2, 5);
+        this.auraLight.position.set(0,1.4,0);
+        this.scene.add(this.auraLight);
 
         // Fallback Sphere
         this.mom = new THREE.Mesh(
@@ -47,7 +57,6 @@ export const Mom3D = {
         window.addEventListener("resize",()=>this.onResize());
     },
 
-    /* ===== תנועות רכות ו”נשימה” ===== */
     floatGently() {
         this.emotion = "neutral";
     },
@@ -68,34 +77,80 @@ export const Mom3D = {
     animate() {
         requestAnimationFrame(()=>this.animate());
         const t = this.clock.getElapsedTime();
+
         if(this.mom){
             // נשימה טבעית
             const baseScale = 1;
             const floatY = 1.4 + Math.sin(t*1.5)*0.05;
             let scaleFactor = baseScale + Math.sin(t*2)*0.02;
 
-            // תגובות לפי רגשות
+            // רגשות + צבע + עוצמת אור
+            let color = new THREE.Color(0xffc1b6);
+            let hemiIntensity = 1.2;
+            let dirIntensity = 0.8;
+            let auraColor = new THREE.Color(0xffe0b2);
+            let auraIntensity = 0.2;
+
             switch(this.emotion){
                 case "sad":
                     scaleFactor *= 0.98;
                     this.mom.rotation.y = Math.sin(t*0.5)*0.05;
+                    color.set(0xaaaacc);
+                    hemiIntensity = 0.8;
+                    dirIntensity = 0.5;
+                    auraColor.set(0xaaaaff);
+                    auraIntensity = 0.15;
                     break;
                 case "happy":
                     scaleFactor *= 1.02;
                     this.mom.rotation.y = Math.sin(t*1)*0.08;
+                    color.set(0xffe0b2);
+                    hemiIntensity = 1.5;
+                    dirIntensity = 1.0;
+                    auraColor.set(0xfff0c2);
+                    auraIntensity = 0.25;
                     break;
                 case "angry":
                     scaleFactor *= 1.05;
                     this.mom.rotation.y = Math.sin(t*3)*0.15;
+                    color.set(0xff9999);
+                    hemiIntensity = 1.0;
+                    dirIntensity = 1.2;
+                    auraColor.set(0xffc0b0);
+                    auraIntensity = 0.2;
                     break;
                 default:
                     this.mom.rotation.y = Math.sin(t*0.5)*0.03;
+                    color.set(0xffc1b6);
+                    hemiIntensity = 1.2;
+                    dirIntensity = 0.8;
+                    auraColor.set(0xffe0b2);
+                    auraIntensity = 0.2;
                     break;
             }
 
+            // apply color if mom has material (fallback sphere)
+            if(this.mom.material) this.mom.material.color.lerp(color,0.1);
+            this.mom.traverse(c => {
+                if(c.isMesh && c.material){
+                    c.material.color.lerp(color,0.05);
+                }
+            });
+
+            // apply scale & position
             this.mom.scale.set(scaleFactor, scaleFactor, scaleFactor);
             this.mom.position.y = floatY;
+
+            // light transitions
+            this.hemiLight.intensity += (hemiIntensity - this.hemiLight.intensity)*0.05;
+            this.dirLight.intensity += (dirIntensity - this.dirLight.intensity)*0.05;
+
+            // Aura gentle pulse
+            this.auraLight.color.lerp(auraColor, 0.05);
+            this.auraLight.intensity += (auraIntensity + Math.sin(t*2)*0.02 - this.auraLight.intensity)*0.05;
+            if(this.mom) this.auraLight.position.y = this.mom.position.y;
         }
+
         this.renderer.render(this.scene,this.camera);
     },
 
