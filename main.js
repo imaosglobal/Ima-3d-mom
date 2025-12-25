@@ -46,19 +46,21 @@ export const Mom3D = {
 
         // Load GLB model
         const loader = new GLTFLoader();
-        loader.load('server/public/3DModel.glb', g => {
-            this.scene.remove(this.mom);
-            this.mom = g.scene;
-            this.mom.position.set(0,-1.2,0);
-            this.scene.add(this.mom);
-        });
+        loader.load(
+            'server/public/3DModel.glb',
+            g => {
+                console.log("3DModel.glb loaded successfully");
+                this.scene.remove(this.mom);
+                this.mom = g.scene;
+                this.mom.position.set(0,-1.2,0);
+                this.scene.add(this.mom);
+            },
+            undefined,
+            e => console.error("Failed to load 3DModel.glb:", e)
+        );
 
         this.animate();
         window.addEventListener("resize",()=>this.onResize());
-    },
-
-    floatGently() {
-        this.emotion = "neutral";
     },
 
     reactToEmotion(text){
@@ -79,12 +81,10 @@ export const Mom3D = {
         const t = this.clock.getElapsedTime();
 
         if(this.mom){
-            // נשימה טבעית
             const baseScale = 1;
             const floatY = 1.4 + Math.sin(t*1.5)*0.05;
             let scaleFactor = baseScale + Math.sin(t*2)*0.02;
 
-            // רגשות + צבע + עוצמת אור
             let color = new THREE.Color(0xffc1b6);
             let hemiIntensity = 1.2;
             let dirIntensity = 0.8;
@@ -129,26 +129,18 @@ export const Mom3D = {
                     break;
             }
 
-            // apply color if mom has material (fallback sphere)
             if(this.mom.material) this.mom.material.color.lerp(color,0.1);
-            this.mom.traverse(c => {
-                if(c.isMesh && c.material){
-                    c.material.color.lerp(color,0.05);
-                }
-            });
+            this.mom.traverse(c => { if(c.isMesh && c.material) c.material.color.lerp(color,0.05); });
 
-            // apply scale & position
             this.mom.scale.set(scaleFactor, scaleFactor, scaleFactor);
             this.mom.position.y = floatY;
 
-            // light transitions
             this.hemiLight.intensity += (hemiIntensity - this.hemiLight.intensity)*0.05;
             this.dirLight.intensity += (dirIntensity - this.dirLight.intensity)*0.05;
 
-            // Aura gentle pulse
             this.auraLight.color.lerp(auraColor, 0.05);
             this.auraLight.intensity += (auraIntensity + Math.sin(t*2)*0.02 - this.auraLight.intensity)*0.05;
-            if(this.mom) this.auraLight.position.y = this.mom.position.y;
+            this.auraLight.position.y = this.mom.position.y;
         }
 
         this.renderer.render(this.scene,this.camera);
