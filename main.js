@@ -21,7 +21,7 @@ export const Mom3D = {
         this.camera.position.set(0,1.6,3);
 
         this.renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setSize(window.innerWidth,window.innerHeight);
         document.getElementById("viewer").appendChild(this.renderer.domElement);
 
         // Lights
@@ -49,7 +49,6 @@ export const Mom3D = {
         loader.load(
             'server/public/3DModel.glb',
             g => {
-                console.log("3DModel.glb loaded successfully");
                 this.scene.remove(this.mom);
                 this.mom = g.scene;
                 this.mom.position.set(0,-1.2,0);
@@ -141,6 +140,14 @@ export const Mom3D = {
             this.auraLight.color.lerp(auraColor, 0.05);
             this.auraLight.intensity += (auraIntensity + Math.sin(t*2)*0.02 - this.auraLight.intensity)*0.05;
             this.auraLight.position.y = this.mom.position.y;
+        }
+
+        // Update debug overlay
+        const debugEl = document.getElementById("debug");
+        if(debugEl){
+            debugEl.textContent = 
+                `User: ${window.currentUser ? window.currentUser.name : "לא מחובר"}\n` +
+                `Model: ${this.mom ? "Loaded" : "Fallback"}\nEmotion: ${this.emotion}`;
         }
 
         this.renderer.render(this.scene,this.camera);
