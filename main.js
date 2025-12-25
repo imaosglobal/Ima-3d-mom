@@ -46,7 +46,7 @@ export const Mom3D = {
 
         // Load GLB model
         const loader = new GLTFLoader();
-        loader.load('server/public/ima (2).glb', g => {
+        loader.load('server/public/3DModel.glb', g => {
             this.scene.remove(this.mom);
             this.mom = g.scene;
             this.mom.position.set(0,-1.2,0);
