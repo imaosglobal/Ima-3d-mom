@@ -14,31 +14,31 @@
 <style>
 html,body{
   margin:0; padding:0; width:100%; height:100%;
-  font-family:system-ui, Arial; background:#f4f5f7; overflow:hidden;
+  font-family:system-ui, Arial; background:linear-gradient(180deg,#eef2f7,#ffffff); overflow:hidden; color:#222;
 }
 #welcome{
   position:fixed; inset:0;
   display:flex; flex-direction:column; justify-content:center; align-items:center;
-  background:linear-gradient(180deg,#ffffff,#eef1f5); z-index:20; transition:opacity .6s;
+  background:linear-gradient(180deg,#f4f6f8,#eef2f7); z-index:20; transition:opacity .6s;
 }
 #welcome.hide{opacity:0; pointer-events:none;}
-#welcome img{width:240px; border-radius:24px; box-shadow:0 20px 50px rgba(0,0,0,.15);}
-#welcome h1{margin:16px 0 4px;}
-#welcome p{margin:0 0 20px;color:#555;}
-#welcome small{margin-top:14px;color:#666;}
+#welcome img{width:240px; border-radius:32px; box-shadow:0 20px 60px rgba(0,0,0,.12);}
+#welcome h1{margin:16px 0 4px; font-size:2.2rem; letter-spacing:0.5px;}
+#welcome p{margin:0 0 20px;color:#555; text-align:center; max-width:300px; line-height:1.4;}
+#welcome small{margin-top:14px;color:#666; font-style:italic;}
 #app,#viewer{position:absolute; inset:0;}
 #viewer{display:none;}
 #ui{position:absolute; inset:0; display:none; pointer-events:none; z-index:10;}
-#speech{position:absolute; bottom:140px; right:30px; max-width:320px;
-  background:white; padding:18px 22px; border-radius:22px;
-  box-shadow:0 15px 40px rgba(0,0,0,.2); font-size:1rem;
-  opacity:0; transition:.4s;}
+#speech{position:absolute; bottom:160px; right:30px; max-width:320px;
+  background:rgba(255,255,255,0.9); padding:18px 22px; border-radius:24px;
+  box-shadow:0 15px 40px rgba(0,0,0,.15); font-size:1rem; line-height:1.4; color:#222;
+  opacity:0; transition:.5s;}
 #speech.show{opacity:1;}
 #chat{position:absolute; bottom:30px; right:30px; display:flex; gap:10px; pointer-events:auto;}
-#chat input{padding:14px 18px; border-radius:20px; border:none; width:220px; box-shadow:0 8px 20px rgba(0,0,0,.15);}
-#chat button{border:none; border-radius:20px; padding:14px 18px; background:#000; color:white; cursor:pointer;}
-#share{position:absolute; top:20px; left:20px; pointer-events:auto; background:white; padding:10px 14px; border-radius:14px; box-shadow:0 8px 20px rgba(0,0,0,.15); font-size:.85rem; cursor:pointer;}
-#logout{position:absolute; top:20px; right:20px; pointer-events:auto; background:white; padding:10px 14px; border-radius:14px; box-shadow:0 8px 20px rgba(0,0,0,.15); font-size:.85rem; cursor:pointer; display:none;}
+#chat input{padding:14px 18px; border-radius:24px; border:none; width:220px; box-shadow:0 8px 20px rgba(0,0,0,.12);}
+#chat button{border:none; border-radius:24px; padding:14px 18px; background:#444; color:white; cursor:pointer; font-weight:500;}
+#share{position:absolute; top:20px; left:20px; pointer-events:auto; background:white; padding:10px 14px; border-radius:16px; box-shadow:0 8px 20px rgba(0,0,0,.12); font-size:.85rem; cursor:pointer;}
+#logout{position:absolute; top:20px; right:20px; pointer-events:auto; background:white; padding:10px 14px; border-radius:16px; box-shadow:0 8px 20px rgba(0,0,0,.12); font-size:.85rem; cursor:pointer; display:none;}
 #crash{display:none; position:fixed; inset:0; background:#200; color:#ffdede; z-index:999; justify-content:center; align-items:center; text-align:center;}
 </style>
 </head>
@@ -48,14 +48,14 @@ html,body{
 <div id="crash">
   <div>
     <h2>אמא מתייצבת…</h2>
-    <p>עוד רגע חוזרים</p>
+    <p>מתחברים מחדש…</p>
   </div>
 </div>
 
 <div id="welcome">
   <img src="server/public/mom.jpg" alt="אמא">
   <h1>אמא</h1>
-  <p>מרחב אישי, רגשי וחי</p>
+  <p>מרחב רגשי, חי ונוכח. אפשר להיות כאן יחד, בלי למהר.</p>
 
   <div id="g_id_onload"
        data-client_id="1093623573018-6s23clvor9u80r08135aelfatuib3a55.apps.googleusercontent.com"
@@ -67,7 +67,7 @@ html,body{
   </div>
   <div class="g_id_signin"></div>
 
-  <small>אפשר להתחיל לדבר עם אמא</small>
+  <small>אפשר לדבר, להרגיש, או לשתוק ביחד</small>
 </div>
 
 <div id="app">
@@ -75,10 +75,10 @@ html,body{
   <div id="ui">
     <div id="speech"></div>
     <div id="chat">
-      <input id="userInput" placeholder="אפשר לכתוב כאן…">
+      <input id="userInput" placeholder="אפשר לכתוב כאן או לשתוק…">
       <button onclick="send()">שליחה</button>
     </div>
-    <div id="share" onclick="share()">לשתף את אמא</div>
+    <div id="share" onclick="share()">לשתף את אמא כשמרגיש נכון</div>
     <div id="logout" onclick="signOut()">התנתק/י</div>
   </div>
 </div>
@@ -91,6 +91,7 @@ const welcomeEl = document.getElementById("welcome");
 const viewerEl = document.getElementById("viewer");
 const uiEl = document.getElementById("ui");
 const logoutEl = document.getElementById("logout");
+const speechEl = document.getElementById("speech");
 
 /* ===== Helpers ===== */
 function showApp() {
@@ -99,8 +100,9 @@ function showApp() {
   uiEl.style.display = "block";
   logoutEl.style.display = "block";
   Mom3D.init();
-  MomSay("אני כאן. אפשר להתחיל.");
-  setTimeout(() => MomSay("מה שלומך עכשיו?"), 6000);
+  MomSay("אני כאן. אפשר להיות כאן יחד.");
+  Mom3D.floatGently();
+  setTimeout(()=>MomSay("מה מרגישים עכשיו?"),6000);
 }
 
 function showWelcome() {
@@ -113,10 +115,10 @@ function showWelcome() {
 
 /* ===== MomSay / Chat ===== */
 window.MomSay = function(text){
-  const s = document.getElementById("speech");
-  s.textContent = text;
-  s.classList.add("show");
-  setTimeout(()=>s.classList.remove("show"),7000);
+  speechEl.textContent = text;
+  speechEl.classList.add("show");
+  setTimeout(()=>speechEl.classList.remove("show"),7000);
+  Mom3D.reactToEmotion(text);
 }
 
 window.send = function(){
@@ -128,9 +130,11 @@ window.send = function(){
 }
 
 function reply(t){
-  if(t.includes("קשה")) return "אני שומעת. אפשר לקחת רגע ביחד.";
-  if(t.includes("טוב")) return "נעים לשמוע. אפשר להישאר עם זה.";
-  return "אני איתך. אפשר להמשיך.";
+  t = t.toLowerCase();
+  if(t.includes("קשה") || t.includes("עצוב")) return "אני כאן. אפשר לקחת רגע יחד, בלי לחץ.";
+  if(t.includes("טוב") || t.includes("נח")) return "נעים לשמוע. אפשר פשוט להיות עם זה.";
+  if(t.includes("כועס") || t.includes("מוטרדת")) return "אני שומעת אותך. אפשר לשחרר יחד.";
+  return "אני איתך. אפשר להרגיש, לשתוק או לדבר כאוות נפשך.";
 }
 
 /* ===== Share ===== */
@@ -166,7 +170,7 @@ window.onSignIn = async function(credentialResponse){
   }
 }
 
-/* ===== Check session on load + fallback timeout ===== */
+/* ===== Session Check ===== */
 (async function init(){
   try{
     const fallback = setTimeout(()=>{ if(!currentUser) showWelcome(); },5000);
