@@ -30,6 +30,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;font-family:system-ui,Arial;
 #share{position:absolute; top:20px; left:20px; pointer-events:auto; background:white; padding:10px 14px; border-radius:14px; box-shadow:0 8px 20px rgba(0,0,0,.15); font-size:.85rem; cursor:pointer;}
 #logout{position:absolute; top:20px; right:20px; pointer-events:auto; background:white; padding:10px 14px; border-radius:14px; box-shadow:0 8px 20px rgba(0,0,0,.15); font-size:.85rem; cursor:pointer; display:none;}
 #crash{display:none; position:fixed; inset:0; background:#200; color:#ffdede; z-index:999; justify-content:center; align-items:center; text-align:center;}
+#debug{position:absolute; top:80px; left:20px; background:rgba(0,0,0,0.5); color:white; padding:8px 12px; border-radius:10px; font-size:0.8rem; z-index:50; white-space:pre-line;}
 </style>
 </head>
 
@@ -64,6 +65,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;font-family:system-ui,Arial;
     </div>
     <div id="share" onclick="share()">לשתף את אמא</div>
     <div id="logout" onclick="signOut()">התנתק/י</div>
+    <div id="debug">Loading...</div>
   </div>
 </div>
 
@@ -75,10 +77,10 @@ const welcomeEl = document.getElementById("welcome");
 const viewerEl = document.getElementById("viewer");
 const uiEl = document.getElementById("ui");
 const logoutEl = document.getElementById("logout");
+const debugEl = document.getElementById("debug");
 
 /* ===== Helpers ===== */
 function showApp() {
-  console.log("showApp called");
   welcomeEl.classList.add("hide");
   viewerEl.style.display = "block";
   uiEl.style.display = "block";
@@ -86,15 +88,24 @@ function showApp() {
   Mom3D.init();
   MomSay("אני כאן. אפשר להתחיל.");
   setTimeout(() => MomSay("מה שלומך עכשיו?"), 6000);
+  updateDebug("showApp called");
 }
 
 function showWelcome() {
-  console.log("showWelcome called");
   welcomeEl.classList.remove("hide");
   viewerEl.style.display = "none";
   uiEl.style.display = "none";
   logoutEl.style.display = "none";
   if(google?.accounts?.id) google.accounts.id.prompt();
+  updateDebug("showWelcome called");
+}
+
+function updateDebug(msg){
+    if(debugEl){
+        debugEl.textContent = 
+            `Debug: ${msg}\nUser: ${currentUser ? currentUser.name : "לא מחובר"}\n` +
+            `Model: ${Mom3D.mom ? "Loaded" : "Fallback"}\nEmotion: ${Mom3D.emotion}`;
+    }
 }
 
 /* ===== MomSay / Chat ===== */
@@ -112,6 +123,7 @@ window.send = function(){
   input.value="";
   Mom3D.reactToEmotion(text);
   MomSay(reply(text));
+  updateDebug("User sent message");
 }
 
 function reply(t){
@@ -125,6 +137,7 @@ window.share = function(){
   const url = location.origin+"?ref=mom";
   navigator.clipboard.writeText(url);
   MomSay("הקישור הועתק. אפשר לשתף כשמרגיש נכון.");
+  updateDebug("Shared URL");
 }
 
 /* ===== Logout ===== */
@@ -134,12 +147,12 @@ window.signOut = async function(){
   showWelcome();
   MomSay("התנתקת/י בהצלחה.");
   if(google?.accounts?.id) google.accounts.id.disableAutoSelect();
+  updateDebug("Signed out");
 }
 
 /* ===== Google Sign-In Callback ===== */
 window.onSignIn = async function(credentialResponse){
   try{
-    console.log("onSignIn called", credentialResponse);
     const meResp = await fetch('/me',{credentials:'include'});
     const data = await meResp.json();
     if(data.loggedIn){
