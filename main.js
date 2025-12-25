@@ -7,6 +7,7 @@ export const Mom3D = {
     renderer: null,
     mom: null,
     clock: null,
+    emotion: "neutral",
     init() {
         this.clock = new THREE.Clock();
         this.scene = new THREE.Scene();
@@ -15,7 +16,7 @@ export const Mom3D = {
         this.camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 100);
         this.camera.position.set(0,1.6,3);
 
-        this.renderer = new THREE.WebGLRenderer({ antialias:true });
+        this.renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         document.getElementById("viewer").appendChild(this.renderer.domElement);
 
@@ -45,16 +46,59 @@ export const Mom3D = {
         this.animate();
         window.addEventListener("resize",()=>this.onResize());
     },
+
+    /* ===== תנועות רכות ו”נשימה” ===== */
+    floatGently() {
+        this.emotion = "neutral";
+    },
+
+    reactToEmotion(text){
+        text = text.toLowerCase();
+        if(text.includes("קשה") || text.includes("עצוב")){
+            this.emotion = "sad";
+        } else if(text.includes("טוב") || text.includes("נח")){
+            this.emotion = "happy";
+        } else if(text.includes("כועס") || text.includes("מוטרדת")){
+            this.emotion = "angry";
+        } else {
+            this.emotion = "neutral";
+        }
+    },
+
     animate() {
         requestAnimationFrame(()=>this.animate());
         const t = this.clock.getElapsedTime();
         if(this.mom){
-            const s = 1 + Math.sin(t*2)*0.02;
-            this.mom.scale.set(s,s,s);
-            this.mom.position.y = 1.4 + Math.sin(t*1.5)*0.05;
+            // נשימה טבעית
+            const baseScale = 1;
+            const floatY = 1.4 + Math.sin(t*1.5)*0.05;
+            let scaleFactor = baseScale + Math.sin(t*2)*0.02;
+
+            // תגובות לפי רגשות
+            switch(this.emotion){
+                case "sad":
+                    scaleFactor *= 0.98;
+                    this.mom.rotation.y = Math.sin(t*0.5)*0.05;
+                    break;
+                case "happy":
+                    scaleFactor *= 1.02;
+                    this.mom.rotation.y = Math.sin(t*1)*0.08;
+                    break;
+                case "angry":
+                    scaleFactor *= 1.05;
+                    this.mom.rotation.y = Math.sin(t*3)*0.15;
+                    break;
+                default:
+                    this.mom.rotation.y = Math.sin(t*0.5)*0.03;
+                    break;
+            }
+
+            this.mom.scale.set(scaleFactor, scaleFactor, scaleFactor);
+            this.mom.position.y = floatY;
         }
         this.renderer.render(this.scene,this.camera);
     },
+
     onResize() {
         if(!this.camera) return;
         this.camera.aspect = window.innerWidth/window.innerHeight;
