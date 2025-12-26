@@ -1,0 +1,50 @@
+name: Unity CI/CD Full - The Eye
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  unity-check-build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [Android, iOS]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Unity
+        uses: game-ci/unity-actions/setup@v2
+        with:
+          unityVersion: 2025.1.0f1
+          activationMethod: manual
+
+      - name: Run automated checks
+        uses: game-ci/unity-actions/test@v2
+        with:
+          projectPath: unity/TheEye
+          testMode: playmode
+          resultsFile: TestResults.xml
+
+      - name: Verify Prefabs, Scripts & Scenes
+        run: |
+          if [ ! -d "unity/TheEye/Assets/_TheEye/Prefabs/Characters" ]; then echo "ERROR: Prefabs missing!"; exit 1; fi
+          if [ ! -d "unity/TheEye/Assets/_TheEye/Scripts" ]; then echo "ERROR: Scripts missing!"; exit 1; fi
+          if [ ! -d "unity/TheEye/Scenes" ]; then echo "ERROR: Scenes missing!"; exit 1; fi
+          echo "All Prefabs, Scripts, Scenes exist."
+
+      - name: Build Project
+        uses: game-ci/unity-actions/build@v2
+        with:
+          targetPlatform: ${{ matrix.platform }}
+          projectPath: unity/TheEye
+          buildName: ${{ matrix.platform == 'Android' && 'TheEye.apk' || 'TheEye-iOS' }}
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.platform }}-build
+          path: ${{ matrix.platform == 'Android' && 'unity/TheEye/Builds/Android/TheEye.apk' || 'unity/TheEye/Builds/iOS' }}
