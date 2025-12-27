@@ -1,0 +1,41 @@
+name: Auto Prepare Request PR
+
+on:
+  issues:
+    types: [opened, labeled]
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.labels.*.name, 'execute')
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Create branch and add request file
+        run: |
+          BRANCH=auto/request-${{ github.event.issue.number }}
+          git checkout -b $BRANCH
+          mkdir -p requests
+          cat > requests/issue-${{ github.event.issue.number }}.md <<'EOF'
+# Issue #${{ github.event.issue.number }}: ${{ github.event.issue.title }}
+
+${{ github.event.issue.body }}
+
+Opened by: ${{ github.event.issue.user.login }}
+EOF
+          git add requests/issue-${{ github.event.issue.number }}.md
+          git commit -m "Auto: add request file for issue #${{ github.event.issue.number }}"
+          git push -u origin $BRANCH
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: auto/request-${{ github.event.issue.number }}
+          title: "Auto: request #${{ github.event.issue.number }} - ${{ github.event.issue.title }}"
+          body: |
+            This PR was created automatically for request #${{ github.event.issue.number }}.
+            Review the request and merge to apply changes.
+          labels: auto-request
