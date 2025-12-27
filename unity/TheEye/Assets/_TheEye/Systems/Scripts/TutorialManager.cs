@@ -101,7 +101,9 @@ public class TutorialManager : MonoBehaviour
     {
         tutorialCompleted = true;
         Debug.Log("[Tutorial] Tutorial completed!");
-        // TODO: Close tutorial UI
+        // Close tutorial UI placeholder - in-Unity, attach UI manager to respond to this state
+        tutorialEnabled = false;
+        ShowMessage("Tutorial UI closed.");
     }
 
     /// <summary>

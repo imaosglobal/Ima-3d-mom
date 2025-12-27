@@ -90,8 +90,8 @@ public class AnalyticsManager : MonoBehaviour
     /// </summary>
     private void SendAnalytics(string eventName)
     {
-        // TODO: Send to Firebase/Google Analytics
-        // For now, just log
+        // Integration point: send analytics to external provider (Firebase/Google Analytics).
+        // Currently logs locally for testing purposes.
         var analyticsData = new
         {
             eventName = eventName,

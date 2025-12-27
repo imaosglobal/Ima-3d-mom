@@ -90,8 +90,8 @@ public class SceneController : MonoBehaviour
 
     private void ShowLoadingScreen()
     {
-        Debug.Log("[SceneController] Loading screen shown");
-        // TODO: Implement loading screen UI
+        Debug.Log("[SceneController] Loading screen shown (placeholder)");
+        // Placeholder: in-Unity, show a loading UI canvas and animate progress
     }
 
     /// <summary>

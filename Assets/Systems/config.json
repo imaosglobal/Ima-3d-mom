@@ -1,0 +1,5 @@
+{
+  "projectName": "The Eye",
+  "startingScene": "EyeEntry",
+  "roles": ["Hunter", "Creator", "Mystic"]
+}

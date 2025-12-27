@@ -91,4 +91,19 @@ public class CharacterBase : MonoBehaviour
     public int GetLevel() => level;
     public int GetExperience() => experience;
     public bool IsAlive() => isAlive;
+
+    // Setters to support save/load
+    public void SetHealth(int h)
+    {
+        currentHealth = Mathf.Clamp(h, 0, maxHealth);
+        if (currentHealth <= 0) Die();
+    }
+
+    public void SetLevel(int newLevel)
+    {
+        if (newLevel <= 0) return;
+        level = newLevel;
+        maxHealth = 100 + (level - 1) * 20;
+        currentHealth = Mathf.Min(currentHealth, maxHealth);
+    }
 }

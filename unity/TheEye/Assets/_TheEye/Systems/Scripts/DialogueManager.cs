@@ -48,7 +48,7 @@ public class DialogueManager : MonoBehaviour
 
         if (npc is QuestGiver qgiver)
         {
-            // TODO: Display quest dialogue
+            Debug.Log($"[Dialogue] Quest offered: {qgiver.questTitle}");
         }
     }
 
@@ -57,8 +57,9 @@ public class DialogueManager : MonoBehaviour
     /// </summary>
     public void NextDialogueLine()
     {
-        Debug.Log("[Dialogue] Next line");
-        // TODO: Implement multi-line dialogue system
+        Debug.Log("[Dialogue] Next line (simulated)");
+        // Simple simulation: end dialogue after next line
+        EndDialogue();
     }
 
     /// <summary>

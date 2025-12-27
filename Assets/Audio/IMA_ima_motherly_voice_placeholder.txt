@@ -1,0 +1,7 @@
+Placeholder for Ima motherly voice audio lines.
+
+Add real voice assets under this folder (wav/mp3/ogg) and assign them to EyeGateway.
+Suggested filenames:
+- ima_mother_intro.wav
+- ima_mother_focus.wav
+- ima_mother_enter.wav

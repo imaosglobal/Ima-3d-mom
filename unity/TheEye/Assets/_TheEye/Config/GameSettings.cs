@@ -29,13 +29,32 @@ public class GameSettings : ScriptableObject
 
     public void SaveSettings()
     {
-        // TODO: Implement save to PlayerPrefs
+        PlayerPrefs.SetFloat("masterVolume", masterVolume);
+        PlayerPrefs.SetFloat("musicVolume", musicVolume);
+        PlayerPrefs.SetFloat("sfxVolume", sfxVolume);
+        PlayerPrefs.SetInt("enableVibration", enableVibration ? 1 : 0);
+        PlayerPrefs.SetInt("enableScreenShake", enableScreenShake ? 1 : 0);
+        PlayerPrefs.SetInt("enableBloodEffects", enableBloodEffects ? 1 : 0);
+        PlayerPrefs.SetInt("maxFrameRate", maxFrameRate);
+        PlayerPrefs.SetInt("useVSync", useVSync ? 1 : 0);
+        PlayerPrefs.SetString("language", language);
+        PlayerPrefs.SetInt("difficultyLevel", difficultyLevel);
+        PlayerPrefs.Save();
         Debug.Log("[GameSettings] Settings saved");
     }
 
     public void LoadSettings()
     {
-        // TODO: Implement load from PlayerPrefs
+        if (PlayerPrefs.HasKey("masterVolume")) masterVolume = PlayerPrefs.GetFloat("masterVolume");
+        musicVolume = PlayerPrefs.GetFloat("musicVolume", musicVolume);
+        sfxVolume = PlayerPrefs.GetFloat("sfxVolume", sfxVolume);
+        enableVibration = PlayerPrefs.GetInt("enableVibration", enableVibration ? 1 : 0) == 1;
+        enableScreenShake = PlayerPrefs.GetInt("enableScreenShake", enableScreenShake ? 1 : 0) == 1;
+        enableBloodEffects = PlayerPrefs.GetInt("enableBloodEffects", enableBloodEffects ? 1 : 0) == 1;
+        maxFrameRate = PlayerPrefs.GetInt("maxFrameRate", maxFrameRate);
+        useVSync = PlayerPrefs.GetInt("useVSync", useVSync ? 1 : 0) == 1;
+        language = PlayerPrefs.GetString("language", language);
+        difficultyLevel = PlayerPrefs.GetInt("difficultyLevel", difficultyLevel);
         Debug.Log("[GameSettings] Settings loaded");
     }
 }

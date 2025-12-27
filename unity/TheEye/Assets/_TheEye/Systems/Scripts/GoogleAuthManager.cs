@@ -27,8 +27,8 @@ public class GoogleAuthManager : MonoBehaviour
 
     private void Start()
     {
-        Debug.Log("[GoogleAuth] Initializing Google Sign-In");
-        // TODO: Initialize Google Play Services SDK
+        Debug.Log("[GoogleAuth] Initializing Google Sign-In (simulated)");
+        // Simulate SDK initialization for local testing
     }
 
     /// <summary>
@@ -38,10 +38,8 @@ public class GoogleAuthManager : MonoBehaviour
     {
         Debug.Log("[GoogleAuth] Starting sign-in flow...");
         
-        // TODO: Implement actual Google Sign-In
-        // Using Play Services SDK for Android
-        // Using Firebase for cross-platform
-        
+        // Simulated Google Sign-In (placeholder for real SDK integration)
+        // Integration points: Play Services SDK (Android) or Firebase Auth (cross-platform)
         SimulateGoogleSignIn();
     }
 
@@ -151,11 +149,27 @@ public class GeoLocalizationManager : MonoBehaviour
         // Check if user is in Israel by Google Sign-In
         if (GoogleAuthManager.Instance && GoogleAuthManager.Instance.IsAuthenticated())
         {
-            // TODO: Get location from user account settings
-            // For now, default to IL if available
-            if (regionDatabase.ContainsKey("IL"))
+                // Attempt to infer location from authenticated user (simple heuristic)
+            if (GoogleAuthManager.Instance != null && GoogleAuthManager.Instance.IsAuthenticated())
             {
-                ApplyRegionSettings("IL");
+                var email = GoogleAuthManager.Instance.GetUserEmail();
+                if (!string.IsNullOrEmpty(email) && email.EndsWith(".il"))
+                {
+                    if (regionDatabase.ContainsKey("IL")) ApplyRegionSettings("IL");
+                    return;
+                }
+                // default authenticated country: IL for local testing
+                if (regionDatabase.ContainsKey("IL"))
+                {
+                    ApplyRegionSettings("IL");
+                    return;
+                }
+            }
+
+            // Default to US
+            if (regionDatabase.ContainsKey("US"))
+            {
+                ApplyRegionSettings("US");
             }
         }
         else

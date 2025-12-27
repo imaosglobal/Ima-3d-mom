@@ -1,0 +1,20 @@
+name: Unity CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unity - placeholder build
+        run: |
+          echo "This job is a placeholder for Unity build steps."
+          echo "Add Unity Setup and Activation here (license or Unity Build Action)."
+          echo "Then run Unity in batchmode to build targets for PC/WebGL/Android/iOS."
+      - name: Upload build artifacts (placeholder)
+        run: echo "Attach build artifacts here when available."

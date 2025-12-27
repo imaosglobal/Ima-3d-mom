@@ -81,7 +81,7 @@ public class MonetizationManager : MonoBehaviour
 
         Debug.Log($"[Monetization] Purchasing {product.productName} for ${product.price}");
         
-        // TODO: Integration with actual payment provider
+        // Integration point: Replace with platform IAP SDK (Unity IAP / Play Billing / App Store) when ready
         // For now, simulate purchase
         SimulatePurchase(productId, product);
     }
@@ -119,10 +119,10 @@ public class MonetizationManager : MonoBehaviour
             return;
         }
 
-        Debug.Log("[Monetization] 📺 Showing advertisement");
+        Debug.Log("[Monetization] 📺 Showing advertisement (simulated)");
         lastAdTime = Time.time;
-        
-        // TODO: Integration with ad network (Google AdMob, etc.)
+        // Simulate ad callback
+        OnAdFinished();
     }
 
     /// <summary>

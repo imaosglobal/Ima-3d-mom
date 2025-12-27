@@ -87,7 +87,17 @@ public class GameInitializer : MonoBehaviour
     public void ContinueGame()
     {
         Debug.Log("[GameInitializer] Continuing game from save...");
-        // TODO: Implement load game logic
+        // Attempt to load save via SaveManager
+        if (SaveManager.Instance != null && SaveManager.Instance.HasSave())
+        {
+            SaveManager.Instance.LoadGame();
+            Debug.Log("[GameInitializer] Save loaded and applied");
+        }
+        else
+        {
+            Debug.LogWarning("[GameInitializer] No save found, starting new game instead");
+            InitializeNewGame();
+        }
     }
 
     /// <summary>

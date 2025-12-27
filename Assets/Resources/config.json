@@ -1,0 +1,8 @@
+{
+  "projectName": "The Eye",
+  "startingScene": "EyeEntry",
+  "roles": ["Hunter", "Creator", "Mystic"],
+  "eyeSettings": {
+    "focusSpeed": 1.2
+  }
+}

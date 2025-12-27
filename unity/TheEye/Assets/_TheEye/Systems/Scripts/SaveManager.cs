@@ -140,7 +140,21 @@ public class SaveManager : MonoBehaviour
         Debug.Log($"[SaveManager] Loading: {data.playerName} - Level {data.playerLevel}");
         Debug.Log($"[SaveManager] Gold: {data.playerGold}, Health: {data.playerHealth}");
         Debug.Log($"[SaveManager] Play time: {data.playTime}s");
-        // TODO: Apply loaded data to game state
+        // Apply loaded data to game state
+        var player = GameObject.FindGameObjectWithTag("Player")?.GetComponent<PlayerCharacter>();
+        if (player != null)
+        {
+            player.SetLevel(data.playerLevel);
+            player.SetHealth(data.playerHealth);
+
+            int currentGold = player.GetGold();
+            int delta = data.playerGold - currentGold;
+            if (delta > 0) player.AddGold(delta);
+
+            Debug.Log("[SaveManager] Applied save data to player character");
+        } else {
+            Debug.LogWarning("[SaveManager] No PlayerCharacter found to apply save data");
+        }
     }
 
     [System.Serializable]
