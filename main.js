@@ -1,199 +1,113 @@
 import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r150/three.module.min.js';
-import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.150/examples/jsm/loaders/GLTFLoader.js';
 
 export const Mom3D = {
-    // core
-    scene: null,
-    camera: null,
-    renderer: null,
-    clock: null,
 
-    // state
-    mom: null,
-    emotion: "neutral",
-    mode: "guest",         // guest | google
-    eyeLevel: 1,           // The Eye progression
-    stabilityScore: 0,     // emotional regulation over time
+  scene:null, camera:null, renderer:null, clock:null,
 
-    // lights
-    hemiLight: null,
-    dirLight: null,
-    auraLight: null,
+  // מצב
+  mode:"eye",                     // eye | ima
+  profile:{ age:10, progress:0, regulation:0 },
+  eyeLevel:1,
 
-    /* ================= INIT ================= */
-    init(config = {}) {
-        this.mode = config.mode || "guest";
-        this.clock = new THREE.Clock();
+  // ישויות
+  eyeSpace:null,
+  ima:null,
 
-        this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0xf4f5f7);
+  init(){
+    this.clock=new THREE.Clock();
+    this.scene=new THREE.Scene();
 
-        this.camera = new THREE.PerspectiveCamera(
-            55,
-            window.innerWidth / window.innerHeight,
-            0.1,
-            100
-        );
-        this.camera.position.set(0, 1.6, 3);
+    this.camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,0.1,100);
+    this.camera.position.set(0,1.6,3);
 
-        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        document.getElementById("viewer").appendChild(this.renderer.domElement);
+    this.renderer=new THREE.WebGLRenderer({antialias:true});
+    this.renderer.setSize(innerWidth,innerHeight);
+    viewer.appendChild(this.renderer.domElement);
 
-        this.setupLights();
-        this.loadMomModel();
+    this.buildEyeSpace();
+    this.buildIma();
 
-        this.animate();
-        window.addEventListener("resize", () => this.onResize());
-    },
+    window.addEventListener("resize",()=>this.resize());
+    this.animate();
+  },
 
-    /* ================= LIGHTS ================= */
-    setupLights() {
-        this.hemiLight = new THREE.HemisphereLight(0xffffff, 0xdddccc, 1.2);
-        this.scene.add(this.hemiLight);
+  /* ===== מרחב המשחק עצמו ===== */
+  buildEyeSpace(){
+    this.eyeSpace=new THREE.Group();
+    this.scene.add(this.eyeSpace);
 
-        this.dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        this.dirLight.position.set(2, 4, 2);
-        this.scene.add(this.dirLight);
+    const geo=new THREE.SphereGeometry(3,64,64);
+    const mat=new THREE.MeshStandardMaterial({
+      color:0x224466, wireframe:true, transparent:true, opacity:0.3
+    });
+    this.eye=new THREE.Mesh(geo,mat);
+    this.eyeSpace.add(this.eye);
 
-        this.auraLight = new THREE.PointLight(0xffe0b2, 0.2, 5);
-        this.auraLight.position.set(0, 1.4, 0);
-        this.scene.add(this.auraLight);
-    },
+    const l=new THREE.HemisphereLight(0xffffff,0x222222,1.2);
+    this.scene.add(l);
+  },
 
-    /* ================= MODEL ================= */
-    loadMomModel() {
-        // fallback
-        this.mom = new THREE.Mesh(
-            new THREE.SphereGeometry(0.6, 64, 64),
-            new THREE.MeshStandardMaterial({ color: 0xffc1b6, roughness: 0.4 })
-        );
-        this.mom.position.y = 1.4;
-        this.scene.add(this.mom);
+  /* ===== אמא ===== */
+  buildIma(){
+    const g=new THREE.SphereGeometry(0.5,64,64);
+    const m=new THREE.MeshStandardMaterial({color:0xffc9b8});
+    this.ima=new THREE.Mesh(g,m);
+    this.ima.visible=false;
+    this.scene.add(this.ima);
+  },
 
-        const loader = new GLTFLoader();
-        loader.load(
-            'server/public/3DModel.glb',
-            gltf => {
-                this.scene.remove(this.mom);
-                this.mom = gltf.scene;
-                this.mom.position.set(0, -1.2, 0);
-                this.scene.add(this.mom);
-            },
-            undefined,
-            e => console.error("GLB load failed:", e)
-        );
-    },
+  /* ===== קלט משתמש ===== */
+  handleUserInput(text){
+    if(text.length>4) this.profile.regulation++;
+    if(this.profile.regulation>5) this.eyeLevel++;
 
-    /* ================= EMOTION & INTENT ================= */
-    reactToEmotion(text) {
-        text = text.toLowerCase();
+    this.updateSpaceByProfile();
+  },
 
-        let prevEmotion = this.emotion;
+  /* ===== התאמת המרחב לאדם ===== */
+  updateSpaceByProfile(){
+    this.eye.material.opacity = Math.min(0.6,0.2+this.profile.regulation*0.05);
+    this.eye.scale.setScalar(1+this.eyeLevel*0.1);
+  },
 
-        if (text.includes("קשה") || text.includes("עצוב")) {
-            this.emotion = "sad";
-        } else if (text.includes("טוב") || text.includes("נח") || text.includes("שמחה")) {
-            this.emotion = "happy";
-        } else if (text.includes("כועס") || text.includes("לחוץ")) {
-            this.emotion = "angry";
-        } else {
-            this.emotion = "neutral";
-        }
-
-        // stability logic (this is The Eye)
-        if (this.emotion === "neutral" || this.emotion === "happy") {
-            this.stabilityScore += 1;
-        } else {
-            this.stabilityScore = Math.max(0, this.stabilityScore - 1);
-        }
-
-        this.evaluateEyeProgress(prevEmotion);
-    },
-
-    /* ================= THE EYE LOGIC ================= */
-    evaluateEyeProgress(prevEmotion) {
-        if (this.mode === "guest" && this.eyeLevel >= 1) return;
-
-        // open next eye only with stability, not excitement
-        if (this.stabilityScore > 6 && this.eyeLevel === 1) {
-            this.eyeLevel = 2;
-            window.MomSay?.("העין השנייה נפתחת. לא מיהרת.");
-        }
-
-        if (this.mode === "google" && this.stabilityScore > 14 && this.eyeLevel === 2) {
-            this.eyeLevel = 3;
-            window.MomSay?.("עין שלישית נפתחת. זה כבר משחק משותף.");
-        }
-    },
-
-    /* ================= ANIMATION ================= */
-    animate() {
-        requestAnimationFrame(() => this.animate());
-        const t = this.clock.getElapsedTime();
-
-        if (this.mom) {
-            const floatY = 1.4 + Math.sin(t * 1.5) * 0.05;
-            let scale = 1 + Math.sin(t * 2) * 0.02;
-
-            let color = new THREE.Color(0xffc1b6);
-            let hemiI = 1.2, dirI = 0.8;
-            let auraI = 0.2;
-
-            switch (this.emotion) {
-                case "sad":
-                    color.set(0xaaaacc);
-                    hemiI = 0.8;
-                    dirI = 0.5;
-                    scale *= 0.98;
-                    break;
-                case "happy":
-                    color.set(0xfff0c2);
-                    hemiI = 1.5;
-                    dirI = 1.0;
-                    scale *= 1.03;
-                    break;
-                case "angry":
-                    color.set(0xff9999);
-                    dirI = 1.2;
-                    scale *= 1.05;
-                    break;
-            }
-
-            this.mom.traverse(o => {
-                if (o.isMesh && o.material) {
-                    o.material.color.lerp(color, 0.05);
-                }
-            });
-
-            this.mom.scale.set(scale, scale, scale);
-            this.mom.position.y = floatY;
-            this.mom.rotation.y = Math.sin(t * (0.4 + this.eyeLevel * 0.2)) * 0.05;
-
-            this.hemiLight.intensity += (hemiI - this.hemiLight.intensity) * 0.05;
-            this.dirLight.intensity += (dirI - this.dirLight.intensity) * 0.05;
-            this.auraLight.intensity += (auraI - this.auraLight.intensity) * 0.05;
-            this.auraLight.position.y = floatY;
-        }
-
-        this.updateDebug();
-        this.renderer.render(this.scene, this.camera);
-    },
-
-    /* ================= DEBUG ================= */
-    updateDebug() {
-        const d = document.getElementById("debug");
-        if (!d) return;
-        d.textContent =
-            `Mode: ${this.mode}\n` +
-            `Eye: ${this.eyeLevel}\n` +
-            `Emotion: ${this.emotion}\n` +
-            `Stability: ${this.stabilityScore}`;
-    },
-
-    onResize() {
-        this.camera.aspect = window.innerWidth / window.innerHeight;
-        this.camera.updateProjectionMatrix();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
+  /* ===== מעבר Eye <-> Ima ===== */
+  switchMode(m){
+    this.mode=m;
+    if(m==="ima"){
+      this.ima.visible=true;
+    } else {
+      this.ima.visible=false;
     }
+  },
+
+  animate(){
+    requestAnimationFrame(()=>this.animate());
+    const t=this.clock.getElapsedTime();
+
+    this.eye.rotation.y+=0.001;
+    this.ima.rotation.y+=0.002;
+
+    if(this.mode==="ima"){
+      this.camera.position.z += (1.6 - this.camera.position.z)*0.05;
+      this.ima.position.y=1.4+Math.sin(t)*0.05;
+    } else {
+      this.camera.position.z += (3 - this.camera.position.z)*0.05;
+    }
+
+    debug.textContent=
+      `Mode: ${this.mode}
+EyeLevel: ${this.eyeLevel}
+Regulation: ${this.profile.regulation}`;
+
+    this.renderer.render(this.scene,this.camera);
+  },
+
+  resize(){
+    this.camera.aspect=innerWidth/innerHeight;
+    this.camera.updateProjectionMatrix();
+    this.renderer.setSize(innerWidth,innerHeight);
+  }
+
 };
+
+Mom3D.init();
