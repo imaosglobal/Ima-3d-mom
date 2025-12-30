@@ -4,9 +4,6 @@ import { ImaManagement } from './imaManagement.js';
 
 export const Mom3D = {
 
-  /* ======================================================
-     STATE – מקור אמת יחיד
-  ====================================================== */
   state:{
     mode:"eye",            // eye | ima | transition
     user:{
@@ -20,7 +17,7 @@ export const Mom3D = {
       openness:0.3
     },
     ima:{
-      form:"human",        // human | abstract | light
+      form:"human",
       visible:false
     },
     transition:{
@@ -29,26 +26,17 @@ export const Mom3D = {
     }
   },
 
-  /* ======================================================
-     CORE
-  ====================================================== */
   scene:null,
   camera:null,
   renderer:null,
   clock:null,
 
-  /* ======================================================
-     ENTITIES
-  ====================================================== */
   eyeSpace:null,
   eye:null,
   spiral:null,
   imaGroup:null,
   lights:{},
 
-  /* ======================================================
-     INIT
-  ====================================================== */
   init(){
     this.clock=new THREE.Clock();
     this.scene=new THREE.Scene();
@@ -68,15 +56,12 @@ export const Mom3D = {
 
     window.addEventListener("resize",()=>this.resize());
 
-    // חיבור למנגנון ניהול כולל
     ImaManagement.createNewModule("Ima3DModule");
 
+    this.addInteractionListeners();
     this.animate();
   },
 
-  /* ======================================================
-     LIGHTING
-  ====================================================== */
   buildLights(){
     this.lights.hemi=new THREE.HemisphereLight(0xffffff,0x222244,1.2);
     this.lights.dir=new THREE.DirectionalLight(0xffffff,0.9);
@@ -84,9 +69,6 @@ export const Mom3D = {
     this.scene.add(this.lights.hemi,this.lights.dir);
   },
 
-  /* ======================================================
-     EYE WORLD (מרחב חי)
-  ====================================================== */
   buildEyeWorld(){
     this.eyeSpace=new THREE.Group();
     this.scene.add(this.eyeSpace);
@@ -113,9 +95,6 @@ export const Mom3D = {
     this.eyeSpace.add(this.eye,this.spiral);
   },
 
-  /* ======================================================
-     IMA ENTITY (ישות מודולרית)
-  ====================================================== */
   buildImaEntity(){
     this.imaGroup=new THREE.Group();
 
@@ -138,9 +117,6 @@ export const Mom3D = {
     this.scene.add(this.imaGroup);
   },
 
-  /* ======================================================
-     USER INPUT (AI READY)
-  ====================================================== */
   handleUserInput(text){
     const u=this.state.user;
 
@@ -154,15 +130,11 @@ export const Mom3D = {
     if(u.age<=5) this.state.ima.form="human";
     else if(u.level>4) this.state.ima.form="abstract";
 
-    // למידה מודולרית אוטומטית
     ImaManagement.Ima3DModule.AI.learn({event:"userInput", text:text, level:u.level});
 
     this.updateWorldFromState();
   },
 
-  /* ======================================================
-     WORLD ADAPTATION ENGINE
-  ====================================================== */
   updateWorldFromState(){
     const u=this.state.user;
     const env=this.state.environment;
@@ -185,9 +157,6 @@ export const Mom3D = {
     }
   },
 
-  /* ======================================================
-     MODE SWITCH + SPIRAL TRANSITION
-  ====================================================== */
   switchMode(target){
     if(this.state.transition.active) return;
 
@@ -196,29 +165,64 @@ export const Mom3D = {
     this.state.mode="transition";
     this.state._targetMode=target;
 
-    if(target==="ima") this.spiral.material.opacity=0.4;
+    // Spiral initial opacity
+    this.spiral.material.opacity = (target==="ima") ? 0.4 : 0.4;
   },
 
-  /* ======================================================
-     MAIN LOOP
-  ====================================================== */
+  addInteractionListeners(){
+    document.getElementById("viewer").addEventListener("click", e=>{
+      const mouse=new THREE.Vector2(
+        (e.clientX/window.innerWidth)*2-1,
+        -(e.clientY/window.innerHeight)*2+1
+      );
+      const raycaster=new THREE.Raycaster();
+      raycaster.setFromCamera(mouse,this.camera);
+      const intersects=raycaster.intersectObject(this.eye,true);
+
+      if(intersects.length>0){
+        this.switchMode("ima");
+        console.log("לחיצה על העין → מעבר ל-Ima");
+      }
+    });
+
+    document.getElementById("viewer").addEventListener("dblclick", e=>{
+      const mouse=new THREE.Vector2(
+        (e.clientX/window.innerWidth)*2-1,
+        -(e.clientY/window.innerHeight)*2+1
+      );
+      const raycaster=new THREE.Raycaster();
+      raycaster.setFromCamera(mouse,this.camera);
+      const intersects=raycaster.intersectObject(this.imaGroup,true);
+
+      if(intersects.length>0){
+        this.switchMode("eye");
+        console.log("לחיצה כפולה על Ima → חזרה למשחק");
+      }
+    });
+  },
+
   animate(){
     requestAnimationFrame(()=>this.animate());
     const dt=this.clock.getDelta();
     const t=this.clock.elapsedTime;
 
-    // Eye motion
     this.eye.rotation.y+=0.001;
     this.spiral.rotation.x+=0.004;
     this.spiral.rotation.y+=0.006;
 
-    // Transition engine
     if(this.state.transition.active){
       this.state.transition.t+=dt;
       const k=Math.min(this.state.transition.t,1);
 
-      this.camera.position.z=THREE.MathUtils.lerp(3,1.6,k);
-      this.spiral.material.opacity=0.4*(1-k);
+      if(this.state._targetMode==="ima"){
+        // כניסה ל-Ima
+        this.camera.position.z=THREE.MathUtils.lerp(3,1.6,k);
+        this.spiral.material.opacity=0.4*(1-k);
+      } else {
+        // חזרה ל-Eye
+        this.camera.position.z=THREE.MathUtils.lerp(1.6,3,k);
+        this.spiral.material.opacity=0.4*k;  // Spiral עולה ואז נעלם
+      }
 
       if(k>=1){
         this.state.transition.active=false;
@@ -227,7 +231,6 @@ export const Mom3D = {
       }
     }
 
-    // Ima behavior
     if(this.state.mode==="ima"){
       this.imaGroup.rotation.y+=0.003;
       this.imaGroup.position.y=1.4+Math.sin(t*1.2)*0.06;
@@ -235,7 +238,6 @@ export const Mom3D = {
       this.camera.position.z+= (3-this.camera.position.z)*0.05;
     }
 
-    // Debug
     debug.textContent=
 `Mode: ${this.state.mode}
 User Level: ${this.state.user.level}
