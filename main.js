@@ -2,9 +2,11 @@ import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r150/thr
 
 export const Mom3D = {
 
-  /* ===== מצב אחוד (SOURCE OF TRUTH) ===== */
+  /* ======================================================
+     STATE – מקור אמת יחיד
+  ====================================================== */
   state:{
-    mode:"eye",   // eye | ima
+    mode:"eye",            // eye | ima | transition
     user:{
       age:10,
       progress:0,
@@ -13,92 +15,126 @@ export const Mom3D = {
     },
     environment:{
       complexity:1,
-      mood:"neutral"
+      openness:0.3
     },
     ima:{
-      form:"human",   // human | abstract | light
+      form:"human",        // human | abstract | light
       visible:false
+    },
+    transition:{
+      active:false,
+      t:0                  // 0..1
     }
   },
 
-  /* ===== Core ===== */
+  /* ======================================================
+     CORE
+  ====================================================== */
   scene:null,
   camera:null,
   renderer:null,
   clock:null,
 
-  /* ===== Entities ===== */
+  /* ======================================================
+     ENTITIES
+  ====================================================== */
   eyeSpace:null,
   eye:null,
+  spiral:null,
   imaGroup:null,
+  lights:{},
 
-  /* ===== INIT ===== */
+  /* ======================================================
+     INIT
+  ====================================================== */
   init(){
     this.clock=new THREE.Clock();
     this.scene=new THREE.Scene();
-    this.scene.background=new THREE.Color(0xf4f5f7);
+    this.scene.background=new THREE.Color(0x0b1020);
 
     this.camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,0.1,100);
     this.camera.position.set(0,1.6,3);
 
     this.renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+    this.renderer.setPixelRatio(Math.min(devicePixelRatio,2));
     this.renderer.setSize(innerWidth,innerHeight);
     viewer.appendChild(this.renderer.domElement);
 
     this.buildLights();
-    this.buildEyeSpace();
-    this.buildIma();
+    this.buildEyeWorld();
+    this.buildImaEntity();
 
     window.addEventListener("resize",()=>this.resize());
     this.animate();
   },
 
-  /* ===== LIGHT ===== */
+  /* ======================================================
+     LIGHTING
+  ====================================================== */
   buildLights(){
-    this.hemi=new THREE.HemisphereLight(0xffffff,0x222233,1.2);
-    this.dir=new THREE.DirectionalLight(0xffffff,0.8);
-    this.dir.position.set(2,4,2);
-    this.scene.add(this.hemi,this.dir);
+    this.lights.hemi=new THREE.HemisphereLight(0xffffff,0x222244,1.2);
+    this.lights.dir=new THREE.DirectionalLight(0xffffff,0.9);
+    this.lights.dir.position.set(3,6,2);
+    this.scene.add(this.lights.hemi,this.lights.dir);
   },
 
-  /* ===== מרחב העין ===== */
-  buildEyeSpace(){
+  /* ======================================================
+     EYE WORLD (מרחב חי)
+  ====================================================== */
+  buildEyeWorld(){
     this.eyeSpace=new THREE.Group();
     this.scene.add(this.eyeSpace);
 
-    const geo=new THREE.SphereGeometry(3,64,64);
-    const mat=new THREE.MeshStandardMaterial({
-      color:0x335577,
-      wireframe:true,
-      transparent:true,
-      opacity:0.3
-    });
+    this.eye=new THREE.Mesh(
+      new THREE.SphereGeometry(3,64,64),
+      new THREE.MeshStandardMaterial({
+        color:0x3355aa,
+        wireframe:true,
+        transparent:true,
+        opacity:0.35
+      })
+    );
 
-    this.eye=new THREE.Mesh(geo,mat);
-    this.eyeSpace.add(this.eye);
+    this.spiral=new THREE.Mesh(
+      new THREE.TorusKnotGeometry(1.2,0.08,160,32),
+      new THREE.MeshStandardMaterial({
+        color:0xffffff,
+        transparent:true,
+        opacity:0
+      })
+    );
+
+    this.eyeSpace.add(this.eye,this.spiral);
   },
 
-  /* ===== אמא מודולרית ===== */
-  buildIma(){
+  /* ======================================================
+     IMA ENTITY (ישות מודולרית)
+  ====================================================== */
+  buildImaEntity(){
     this.imaGroup=new THREE.Group();
 
     const core=new THREE.Mesh(
-      new THREE.SphereGeometry(0.45,64,64),
+      new THREE.IcosahedronGeometry(0.45,2),
       new THREE.MeshStandardMaterial({color:0xffc9b8,roughness:0.4})
     );
 
-    const halo=new THREE.Mesh(
-      new THREE.TorusGeometry(0.6,0.05,16,64),
-      new THREE.MeshStandardMaterial({color:0xffffcc})
+    const aura=new THREE.Mesh(
+      new THREE.SphereGeometry(0.7,32,32),
+      new THREE.MeshStandardMaterial({
+        color:0xfff0c0,
+        transparent:true,
+        opacity:0.15
+      })
     );
-    halo.rotation.x=Math.PI/2;
 
-    this.imaGroup.add(core,halo);
+    this.imaGroup.add(core,aura);
     this.imaGroup.visible=false;
     this.scene.add(this.imaGroup);
   },
 
-  /* ===== קלט משתמש ===== */
+  /* ======================================================
+     USER INPUT (AI READY)
+  ====================================================== */
   handleUserInput(text){
     const u=this.state.user;
 
@@ -106,70 +142,96 @@ export const Mom3D = {
     if(u.regulation>5){
       u.level++;
       this.state.environment.complexity++;
+      u.regulation=0;
     }
 
-    if(u.age<6){
-      this.state.ima.form="human";
-    } else if(u.level>5){
-      this.state.ima.form="abstract";
-    }
+    if(u.age<=5) this.state.ima.form="human";
+    else if(u.level>4) this.state.ima.form="abstract";
 
-    this.updateSpaceByState();
+    this.updateWorldFromState();
   },
 
-  /* ===== התאמת המרחב ===== */
-  updateSpaceByState(){
+  /* ======================================================
+     WORLD ADAPTATION ENGINE
+  ====================================================== */
+  updateWorldFromState(){
     const u=this.state.user;
     const env=this.state.environment;
 
-    this.eye.material.opacity=Math.min(0.7,0.2+u.level*0.05);
-    this.eye.scale.setScalar(1+env.complexity*0.15);
+    this.eye.material.opacity=Math.min(0.65,0.25+env.complexity*0.05);
+    this.eye.scale.setScalar(1+env.complexity*0.12);
 
-    if(u.age<6){
+    if(u.age<=5){
       this.eye.material.wireframe=false;
       this.eye.material.color.set(0x66ccff);
-    } else {
+    }else{
       this.eye.material.wireframe=true;
-      this.eye.material.color.set(0x335577);
+      this.eye.material.color.set(0x3355aa);
     }
 
     if(this.state.ima.form==="abstract"){
-      this.imaGroup.scale.setScalar(1.2);
-    } else {
+      this.imaGroup.scale.setScalar(1.25);
+    }else{
       this.imaGroup.scale.setScalar(1);
     }
   },
 
-  /* ===== מעבר Eye ⇄ Ima ===== */
-  switchMode(m){
-    this.state.mode=m;
-    this.state.ima.visible=(m==="ima");
-    this.imaGroup.visible=this.state.ima.visible;
+  /* ======================================================
+     MODE SWITCH + TRANSITION
+  ====================================================== */
+  switchMode(target){
+    if(this.state.transition.active) return;
+
+    this.state.transition.active=true;
+    this.state.transition.t=0;
+    this.state.mode="transition";
+    this.state._targetMode=target;
+
+    if(target==="ima") this.spiral.material.opacity=0.4;
   },
 
-  /* ===== LOOP ===== */
+  /* ======================================================
+     MAIN LOOP
+  ====================================================== */
   animate(){
     requestAnimationFrame(()=>this.animate());
-    const t=this.clock.getElapsedTime();
+    const dt=this.clock.getDelta();
+    const t=this.clock.elapsedTime;
 
-    /* eye */
+    /* ----- Eye motion ----- */
     this.eye.rotation.y+=0.001;
+    this.spiral.rotation.x+=0.004;
+    this.spiral.rotation.y+=0.006;
 
-    /* ima */
-    this.imaGroup.rotation.y+=0.002;
-    this.imaGroup.position.y=1.4+Math.sin(t)*0.05;
+    /* ----- Transition engine ----- */
+    if(this.state.transition.active){
+      this.state.transition.t+=dt;
+      const k=Math.min(this.state.transition.t,1);
 
-    /* camera */
-    this.camera.position.z +=
-      ((this.state.mode==="ima"?1.6:3)-this.camera.position.z)*0.05;
+      this.camera.position.z=THREE.MathUtils.lerp(3,1.6,k);
+      this.spiral.material.opacity=0.4*(1-k);
 
-    /* debug */
+      if(k>=1){
+        this.state.transition.active=false;
+        this.state.mode=this.state._targetMode;
+        this.imaGroup.visible=(this.state.mode==="ima");
+      }
+    }
+
+    /* ----- Ima behavior ----- */
+    if(this.state.mode==="ima"){
+      this.imaGroup.rotation.y+=0.003;
+      this.imaGroup.position.y=1.4+Math.sin(t*1.2)*0.06;
+    }else{
+      this.camera.position.z+= (3-this.camera.position.z)*0.05;
+    }
+
+    /* ----- Debug ----- */
     debug.textContent=
 `Mode: ${this.state.mode}
-Age: ${this.state.user.age}
-Level: ${this.state.user.level}
+User Level: ${this.state.user.level}
 Complexity: ${this.state.environment.complexity}
-ImaForm: ${this.state.ima.form}`;
+Ima Form: ${this.state.ima.form}`;
 
     this.renderer.render(this.scene,this.camera);
   },
