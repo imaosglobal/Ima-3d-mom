@@ -1,4 +1,6 @@
+// main.js
 import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r150/three.module.min.js';
+import { ImaManagement } from './imaManagement.js';
 
 export const Mom3D = {
 
@@ -58,13 +60,17 @@ export const Mom3D = {
     this.renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
     this.renderer.setPixelRatio(Math.min(devicePixelRatio,2));
     this.renderer.setSize(innerWidth,innerHeight);
-    viewer.appendChild(this.renderer.domElement);
+    document.getElementById("viewer").appendChild(this.renderer.domElement);
 
     this.buildLights();
     this.buildEyeWorld();
     this.buildImaEntity();
 
     window.addEventListener("resize",()=>this.resize());
+
+    // חיבור למנגנון ניהול כולל
+    ImaManagement.createNewModule("Ima3DModule");
+
     this.animate();
   },
 
@@ -148,6 +154,9 @@ export const Mom3D = {
     if(u.age<=5) this.state.ima.form="human";
     else if(u.level>4) this.state.ima.form="abstract";
 
+    // למידה מודולרית אוטומטית
+    ImaManagement.Ima3DModule.AI.learn({event:"userInput", text:text, level:u.level});
+
     this.updateWorldFromState();
   },
 
@@ -177,7 +186,7 @@ export const Mom3D = {
   },
 
   /* ======================================================
-     MODE SWITCH + TRANSITION
+     MODE SWITCH + SPIRAL TRANSITION
   ====================================================== */
   switchMode(target){
     if(this.state.transition.active) return;
@@ -198,12 +207,12 @@ export const Mom3D = {
     const dt=this.clock.getDelta();
     const t=this.clock.elapsedTime;
 
-    /* ----- Eye motion ----- */
+    // Eye motion
     this.eye.rotation.y+=0.001;
     this.spiral.rotation.x+=0.004;
     this.spiral.rotation.y+=0.006;
 
-    /* ----- Transition engine ----- */
+    // Transition engine
     if(this.state.transition.active){
       this.state.transition.t+=dt;
       const k=Math.min(this.state.transition.t,1);
@@ -218,7 +227,7 @@ export const Mom3D = {
       }
     }
 
-    /* ----- Ima behavior ----- */
+    // Ima behavior
     if(this.state.mode==="ima"){
       this.imaGroup.rotation.y+=0.003;
       this.imaGroup.position.y=1.4+Math.sin(t*1.2)*0.06;
@@ -226,12 +235,13 @@ export const Mom3D = {
       this.camera.position.z+= (3-this.camera.position.z)*0.05;
     }
 
-    /* ----- Debug ----- */
+    // Debug
     debug.textContent=
 `Mode: ${this.state.mode}
 User Level: ${this.state.user.level}
 Complexity: ${this.state.environment.complexity}
-Ima Form: ${this.state.ima.form}`;
+Ima Form: ${this.state.ima.form}
+AI Memory: ${ImaManagement.Ima3DModule.AI.learningData.length}`;
 
     this.renderer.render(this.scene,this.camera);
   },
@@ -241,6 +251,7 @@ Ima Form: ${this.state.ima.form}`;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(innerWidth,innerHeight);
   }
+
 };
 
 Mom3D.init();
