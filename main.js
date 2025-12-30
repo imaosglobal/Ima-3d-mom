@@ -2,161 +2,198 @@ import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r150/thr
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.150/examples/jsm/loaders/GLTFLoader.js';
 
 export const Mom3D = {
+    // core
     scene: null,
     camera: null,
     renderer: null,
-    mom: null,
     clock: null,
+
+    // state
+    mom: null,
     emotion: "neutral",
+    mode: "guest",         // guest | google
+    eyeLevel: 1,           // The Eye progression
+    stabilityScore: 0,     // emotional regulation over time
+
+    // lights
     hemiLight: null,
     dirLight: null,
     auraLight: null,
 
-    init() {
+    /* ================= INIT ================= */
+    init(config = {}) {
+        this.mode = config.mode || "guest";
         this.clock = new THREE.Clock();
+
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0xf4f5f7);
 
-        this.camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 100);
-        this.camera.position.set(0,1.6,3);
+        this.camera = new THREE.PerspectiveCamera(
+            55,
+            window.innerWidth / window.innerHeight,
+            0.1,
+            100
+        );
+        this.camera.position.set(0, 1.6, 3);
 
-        this.renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
-        this.renderer.setSize(window.innerWidth,window.innerHeight);
+        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
         document.getElementById("viewer").appendChild(this.renderer.domElement);
 
-        // Lights
-        this.hemiLight = new THREE.HemisphereLight(0xffffff,0xdddccc,1.2);
+        this.setupLights();
+        this.loadMomModel();
+
+        this.animate();
+        window.addEventListener("resize", () => this.onResize());
+    },
+
+    /* ================= LIGHTS ================= */
+    setupLights() {
+        this.hemiLight = new THREE.HemisphereLight(0xffffff, 0xdddccc, 1.2);
         this.scene.add(this.hemiLight);
-        this.dirLight = new THREE.DirectionalLight(0xffffff,0.8);
-        this.dirLight.position.set(2,4,2);
+
+        this.dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        this.dirLight.position.set(2, 4, 2);
         this.scene.add(this.dirLight);
 
-        // Soft Aura Light
         this.auraLight = new THREE.PointLight(0xffe0b2, 0.2, 5);
-        this.auraLight.position.set(0,1.4,0);
+        this.auraLight.position.set(0, 1.4, 0);
         this.scene.add(this.auraLight);
+    },
 
-        // Fallback Sphere
+    /* ================= MODEL ================= */
+    loadMomModel() {
+        // fallback
         this.mom = new THREE.Mesh(
-            new THREE.SphereGeometry(0.6,64,64),
-            new THREE.MeshStandardMaterial({color:0xffc1b6,roughness:0.4})
+            new THREE.SphereGeometry(0.6, 64, 64),
+            new THREE.MeshStandardMaterial({ color: 0xffc1b6, roughness: 0.4 })
         );
         this.mom.position.y = 1.4;
         this.scene.add(this.mom);
 
-        // Load GLB model
         const loader = new GLTFLoader();
         loader.load(
             'server/public/3DModel.glb',
-            g => {
+            gltf => {
                 this.scene.remove(this.mom);
-                this.mom = g.scene;
-                this.mom.position.set(0,-1.2,0);
+                this.mom = gltf.scene;
+                this.mom.position.set(0, -1.2, 0);
                 this.scene.add(this.mom);
             },
             undefined,
-            e => console.error("Failed to load 3DModel.glb:", e)
+            e => console.error("GLB load failed:", e)
         );
-
-        this.animate();
-        window.addEventListener("resize",()=>this.onResize());
     },
 
-    reactToEmotion(text){
+    /* ================= EMOTION & INTENT ================= */
+    reactToEmotion(text) {
         text = text.toLowerCase();
-        if(text.includes("קשה") || text.includes("עצוב")){
+
+        let prevEmotion = this.emotion;
+
+        if (text.includes("קשה") || text.includes("עצוב")) {
             this.emotion = "sad";
-        } else if(text.includes("טוב") || text.includes("נח")){
+        } else if (text.includes("טוב") || text.includes("נח") || text.includes("שמחה")) {
             this.emotion = "happy";
-        } else if(text.includes("כועס") || text.includes("מוטרדת")){
+        } else if (text.includes("כועס") || text.includes("לחוץ")) {
             this.emotion = "angry";
         } else {
             this.emotion = "neutral";
         }
+
+        // stability logic (this is The Eye)
+        if (this.emotion === "neutral" || this.emotion === "happy") {
+            this.stabilityScore += 1;
+        } else {
+            this.stabilityScore = Math.max(0, this.stabilityScore - 1);
+        }
+
+        this.evaluateEyeProgress(prevEmotion);
     },
 
+    /* ================= THE EYE LOGIC ================= */
+    evaluateEyeProgress(prevEmotion) {
+        if (this.mode === "guest" && this.eyeLevel >= 1) return;
+
+        // open next eye only with stability, not excitement
+        if (this.stabilityScore > 6 && this.eyeLevel === 1) {
+            this.eyeLevel = 2;
+            window.MomSay?.("העין השנייה נפתחת. לא מיהרת.");
+        }
+
+        if (this.mode === "google" && this.stabilityScore > 14 && this.eyeLevel === 2) {
+            this.eyeLevel = 3;
+            window.MomSay?.("עין שלישית נפתחת. זה כבר משחק משותף.");
+        }
+    },
+
+    /* ================= ANIMATION ================= */
     animate() {
-        requestAnimationFrame(()=>this.animate());
+        requestAnimationFrame(() => this.animate());
         const t = this.clock.getElapsedTime();
 
-        if(this.mom){
-            const baseScale = 1;
-            const floatY = 1.4 + Math.sin(t*1.5)*0.05;
-            let scaleFactor = baseScale + Math.sin(t*2)*0.02;
+        if (this.mom) {
+            const floatY = 1.4 + Math.sin(t * 1.5) * 0.05;
+            let scale = 1 + Math.sin(t * 2) * 0.02;
 
             let color = new THREE.Color(0xffc1b6);
-            let hemiIntensity = 1.2;
-            let dirIntensity = 0.8;
-            let auraColor = new THREE.Color(0xffe0b2);
-            let auraIntensity = 0.2;
+            let hemiI = 1.2, dirI = 0.8;
+            let auraI = 0.2;
 
-            switch(this.emotion){
+            switch (this.emotion) {
                 case "sad":
-                    scaleFactor *= 0.98;
-                    this.mom.rotation.y = Math.sin(t*0.5)*0.05;
                     color.set(0xaaaacc);
-                    hemiIntensity = 0.8;
-                    dirIntensity = 0.5;
-                    auraColor.set(0xaaaaff);
-                    auraIntensity = 0.15;
+                    hemiI = 0.8;
+                    dirI = 0.5;
+                    scale *= 0.98;
                     break;
                 case "happy":
-                    scaleFactor *= 1.02;
-                    this.mom.rotation.y = Math.sin(t*1)*0.08;
-                    color.set(0xffe0b2);
-                    hemiIntensity = 1.5;
-                    dirIntensity = 1.0;
-                    auraColor.set(0xfff0c2);
-                    auraIntensity = 0.25;
+                    color.set(0xfff0c2);
+                    hemiI = 1.5;
+                    dirI = 1.0;
+                    scale *= 1.03;
                     break;
                 case "angry":
-                    scaleFactor *= 1.05;
-                    this.mom.rotation.y = Math.sin(t*3)*0.15;
                     color.set(0xff9999);
-                    hemiIntensity = 1.0;
-                    dirIntensity = 1.2;
-                    auraColor.set(0xffc0b0);
-                    auraIntensity = 0.2;
-                    break;
-                default:
-                    this.mom.rotation.y = Math.sin(t*0.5)*0.03;
-                    color.set(0xffc1b6);
-                    hemiIntensity = 1.2;
-                    dirIntensity = 0.8;
-                    auraColor.set(0xffe0b2);
-                    auraIntensity = 0.2;
+                    dirI = 1.2;
+                    scale *= 1.05;
                     break;
             }
 
-            if(this.mom.material) this.mom.material.color.lerp(color,0.1);
-            this.mom.traverse(c => { if(c.isMesh && c.material) c.material.color.lerp(color,0.05); });
+            this.mom.traverse(o => {
+                if (o.isMesh && o.material) {
+                    o.material.color.lerp(color, 0.05);
+                }
+            });
 
-            this.mom.scale.set(scaleFactor, scaleFactor, scaleFactor);
+            this.mom.scale.set(scale, scale, scale);
             this.mom.position.y = floatY;
+            this.mom.rotation.y = Math.sin(t * (0.4 + this.eyeLevel * 0.2)) * 0.05;
 
-            this.hemiLight.intensity += (hemiIntensity - this.hemiLight.intensity)*0.05;
-            this.dirLight.intensity += (dirIntensity - this.dirLight.intensity)*0.05;
-
-            this.auraLight.color.lerp(auraColor, 0.05);
-            this.auraLight.intensity += (auraIntensity + Math.sin(t*2)*0.02 - this.auraLight.intensity)*0.05;
-            this.auraLight.position.y = this.mom.position.y;
+            this.hemiLight.intensity += (hemiI - this.hemiLight.intensity) * 0.05;
+            this.dirLight.intensity += (dirI - this.dirLight.intensity) * 0.05;
+            this.auraLight.intensity += (auraI - this.auraLight.intensity) * 0.05;
+            this.auraLight.position.y = floatY;
         }
 
-        // Update debug overlay
-        const debugEl = document.getElementById("debug");
-        if(debugEl){
-            debugEl.textContent = 
-                `User: ${window.currentUser ? window.currentUser.name : "לא מחובר"}\n` +
-                `Model: ${this.mom ? "Loaded" : "Fallback"}\nEmotion: ${this.emotion}`;
-        }
+        this.updateDebug();
+        this.renderer.render(this.scene, this.camera);
+    },
 
-        this.renderer.render(this.scene,this.camera);
+    /* ================= DEBUG ================= */
+    updateDebug() {
+        const d = document.getElementById("debug");
+        if (!d) return;
+        d.textContent =
+            `Mode: ${this.mode}\n` +
+            `Eye: ${this.eyeLevel}\n` +
+            `Emotion: ${this.emotion}\n` +
+            `Stability: ${this.stabilityScore}`;
     },
 
     onResize() {
-        if(!this.camera) return;
-        this.camera.aspect = window.innerWidth/window.innerHeight;
+        this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
-        this.renderer.setSize(window.innerWidth,window.innerHeight);
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
     }
 };
