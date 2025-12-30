@@ -3,134 +3,48 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>אמא / Mom</title>
+<title>אמא / The Eye</title>
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script type="module" src="./main.js"></script>
 
 <style>
-html,body{margin:0;padding:0;width:100%;height:100%;font-family:system-ui,Arial;background:#eef1f5;overflow:hidden;}
-#welcome{position:fixed; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center;
-background:radial-gradient(circle at top,#ffffff,#e6ebf2); z-index:20; transition:opacity .6s;}
-#welcome.hide{opacity:0; pointer-events:none;}
-#welcome img{width:220px;border-radius:28px;box-shadow:0 20px 50px rgba(0,0,0,.18);}
-#welcome h1{margin:16px 0 4px;}
-#welcome p{margin:0 0 16px;color:#555;text-align:center;max-width:340px;}
-#welcome .actions{display:flex;flex-direction:column;gap:10px;width:260px;}
-#welcome button{padding:14px;border-radius:20px;border:none;cursor:pointer;font-size:0.95rem;}
-#guestBtn{background:#fff;box-shadow:0 8px 20px rgba(0,0,0,.12);}
-#app,#viewer{position:absolute; inset:0;}
-#viewer{display:none;}
-#ui{position:absolute; inset:0; display:none; pointer-events:none; z-index:10;}
-#speech{position:absolute; bottom:150px; right:30px; max-width:320px;
-background:white;padding:18px 22px;border-radius:22px;
-box-shadow:0 15px 40px rgba(0,0,0,.2);opacity:0;transition:.4s;}
-#speech.show{opacity:1;}
-#chat{position:absolute; bottom:30px; right:30px; display:flex; gap:10px; pointer-events:auto;}
-#chat input,#chat button{padding:14px 18px;border-radius:20px;border:none;}
-#chat button{background:#000;color:#fff;}
-#logout{position:absolute; top:20px; right:20px;pointer-events:auto;display:none;}
-#debug{position:absolute; top:80px; left:20px;background:rgba(0,0,0,.45);color:white;
-padding:8px 12px;border-radius:10px;font-size:0.75rem;}
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;font-family:system-ui}
+#viewer{position:fixed;inset:0}
+#ui{position:fixed;inset:0;pointer-events:none}
+#chat{position:absolute;bottom:20px;right:20px;display:flex;gap:8px;pointer-events:auto}
+#chat input,#chat button{padding:14px;border-radius:18px;border:none}
+#modeBtn{position:absolute;top:20px;left:20px;pointer-events:auto}
+#debug{position:absolute;top:70px;left:20px;background:#0008;color:#fff;padding:8px;font-size:12px}
 </style>
 </head>
 
 <body>
 
-<div id="welcome">
-  <img src="server/public/mom.jpg">
-  <h1>אמא</h1>
-  <p>
-    מרחב לחיבור בין אדם, משחק ותודעה.<br>
-    לא למהר. לבחור איך נכנסים.
-  </p>
+<div id="viewer"></div>
 
-  <div class="actions">
-    <button id="guestBtn" onclick="enterAsGuest()">כניסה כאורח</button>
-
-    <div id="g_id_onload"
-      data-client_id="1093623573018-6s23clvor9u80r08135aelfatuib3a55.apps.googleusercontent.com"
-      data-callback="onSignIn"
-      data-auto_prompt="false">
-    </div>
-    <div class="g_id_signin"></div>
+<div id="ui">
+  <button id="modeBtn" onclick="toggleMode()">אמא / העין</button>
+  <div id="chat">
+    <input id="input" placeholder="כתוב או דבר…">
+    <button onclick="send()">שליחה</button>
   </div>
-
-  <small>השמחה פותחת שערים מהר יותר מפחד</small>
+  <pre id="debug"></pre>
 </div>
 
-<div id="app">
-  <div id="viewer"></div>
-  <div id="ui">
-    <div id="speech"></div>
-    <div id="chat">
-      <input id="userInput" placeholder="מה עובר עכשיו?">
-      <button onclick="send()">שליחה</button>
-    </div>
-    <button id="logout" onclick="signOut()">התנתקות</button>
-    <div id="debug"></div>
-  </div>
-</div>
+<script>
+let mode="eye";
 
-<script type="module">
-import { Mom3D } from './main.js';
-
-let currentUser=null;
-let entryMode="none";
-
-const welcome=document.getElementById("welcome");
-const viewer=document.getElementById("viewer");
-const ui=document.getElementById("ui");
-const debug=document.getElementById("debug");
-const logoutBtn=document.getElementById("logout");
-
-function startExperience(){
-  welcome.classList.add("hide");
-  viewer.style.display="block";
-  ui.style.display="block";
-  if(entryMode==="google") logoutBtn.style.display="block";
-  Mom3D.init({mode:entryMode});
-  MomSay(entryMode==="guest"
-    ? "נכנסת כאורח. נתחיל בעין הראשונה."
-    : "ברוך הבא. נפתח את השער ביחד.");
-  setTimeout(()=>MomSay("איך אתה מגיע לרגע הזה?"),4000);
-  updateDebug();
+window.toggleMode=()=>{
+  mode = mode==="eye" ? "ima" : "eye";
+  window.Mom3D.switchMode(mode);
 }
 
-window.enterAsGuest=function(){
-  entryMode="guest";
-  startExperience();
-}
-
-window.onSignIn=async function(){
-  entryMode="google";
-  currentUser={verified:true};
-  startExperience();
-}
-
-window.MomSay=function(t){
-  const s=document.getElementById("speech");
-  s.textContent=t;
-  s.classList.add("show");
-  setTimeout(()=>s.classList.remove("show"),7000);
-}
-
-window.send=function(){
-  const i=document.getElementById("userInput");
-  if(!i.value) return;
-  Mom3D.reactToEmotion(i.value);
-  i.value="";
-}
-
-window.signOut=function(){
-  location.reload();
-}
-
-function updateDebug(){
-  debug.textContent=
-    `Mode: ${entryMode}
-User: ${currentUser? "verified":"guest"}
-Eye level: ${Mom3D.eyeLevel||1}`;
+window.send=()=>{
+  const t=input.value.trim();
+  if(!t) return;
+  input.value="";
+  window.Mom3D.handleUserInput(t);
 }
 </script>
 
