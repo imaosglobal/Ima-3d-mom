@@ -1,0 +1,22 @@
+[
+  {
+    "repo": "apify/crawlee",
+    "patterns": 10
+  },
+  {
+    "repo": "leon-ai/leon",
+    "patterns": 10
+  },
+  {
+    "repo": "HBAI-Ltd/Toonflow-app",
+    "patterns": 4
+  },
+  {
+    "repo": "jo-inc/camofox-browser",
+    "patterns": 10
+  },
+  {
+    "repo": "SynkraAI/aiox-core",
+    "patterns": 10
+  }
+]
