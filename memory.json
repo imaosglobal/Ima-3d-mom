@@ -25,9 +25,9 @@
       "value": "change detected",
       "type": "sync_event",
       "weight": 1,
-      "hits": 7,
+      "hits": 8,
       "created": 1777302766929,
-      "lastUsed": 1777302796949
+      "lastUsed": 1777302801948
     }
   ]
 }
