@@ -25,9 +25,65 @@
       "value": "change detected",
       "type": "sync_event",
       "weight": 1,
-      "hits": 14,
+      "hits": 22,
       "created": 1777302766929,
-      "lastUsed": 1777302831935
+      "lastUsed": 1777303036252
+    },
+    {
+      "value": "diff detected: 218281",
+      "type": "sync_event",
+      "weight": 0.5,
+      "hits": 1,
+      "created": 1777302919790,
+      "lastUsed": 1777302919790
+    },
+    {
+      "value": "diff detected: 183",
+      "type": "sync_event",
+      "weight": 0.5,
+      "hits": 1,
+      "created": 1777302928066,
+      "lastUsed": 1777302928066
+    },
+    {
+      "value": "diff detected: 180",
+      "type": "sync_event",
+      "weight": 0.7999999999999999,
+      "hits": 4,
+      "created": 1777302935597,
+      "lastUsed": 1777303015498
+    },
+    {
+      "value": "diff detected: 0",
+      "type": "sync_event",
+      "weight": 0.7999999999999999,
+      "hits": 4,
+      "created": 1777302951867,
+      "lastUsed": 1777302992051
+    },
+    {
+      "value": "diff detected: 178",
+      "type": "sync_event",
+      "weight": 0.5,
+      "hits": 1,
+      "created": 1777302960047,
+      "lastUsed": 1777302960047
+    },
+    {
+      "value": "diff detected: 15",
+      "type": "sync_event",
+      "weight": 0.5,
+      "hits": 1,
+      "created": 1777303000140,
+      "lastUsed": 1777303000140
+    },
+    {
+      "value": "diff detected: 179",
+      "type": "sync_event",
+      "weight": 0.5,
+      "hits": 1,
+      "created": 1777303007553,
+      "lastUsed": 1777303007553
     }
   ]
 }
