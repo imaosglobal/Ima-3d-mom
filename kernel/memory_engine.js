@@ -2,35 +2,47 @@ const fs = require("fs");
 
 const FILE = "./memory.json";
 
-function load() {
+function loadMemory() {
   try {
-    return JSON.parse(fs.readFileSync(FILE));
-  } catch {
-    return { profile: { name: "אורי", mood: "calm", personality: "neutral" }, memory: [] };
+    if (!fs.existsSync(FILE)) {
+      const init = {
+        profile: {
+          name: "אורי",
+          mood: "calm",
+          personality: "neutral"
+        },
+        memory: []
+      };
+      fs.writeFileSync(FILE, JSON.stringify(init, null, 2));
+      return init;
+    }
+
+    return JSON.parse(fs.readFileSync(FILE, "utf8"));
+  } catch (e) {
+    return { profile: {}, memory: [] };
   }
 }
 
-function save(mem) {
+function saveMemory(mem) {
   fs.writeFileSync(FILE, JSON.stringify(mem, null, 2));
 }
 
-function addMemory(mem, value, type="fact") {
-  const found = mem.memory.find(m => m.value === value);
+function addMemory(mem, value, type = "general") {
+  if (!mem.memory) mem.memory = [];
 
-  if (found) {
-    found.hits++;
-    found.weight = Math.min(1, found.weight + 0.1);
-    found.lastUsed = Date.now();
-  } else {
-    mem.memory.push({
-      value,
-      type,
-      weight: 0.5,
-      hits: 1,
-      created: Date.now(),
-      lastUsed: Date.now()
-    });
-  }
+  mem.memory.push({
+    value,
+    type,
+    time: Date.now()
+  });
+
+  if (mem.memory.length > 50) mem.memory.shift();
+
+  return mem;
 }
 
-module.exports = { load, save, addMemory };
+module.exports = {
+  loadMemory,
+  saveMemory,
+  addMemory
+};

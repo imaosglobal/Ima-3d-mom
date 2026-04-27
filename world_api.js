@@ -1,43 +1,34 @@
 const express = require("express");
+const { loadMemory, saveMemory, addMemory } = require("./kernel/memory_engine");
+const { decide } = require("./kernel/brain_core");
+const { dispatch } = require("./kernel/action_dispatcher");
+
 const app = express();
-
-let usageLog = [];
-
 app.use(express.json());
 
-// כניסה לעולם
-app.post("/ima/run", (req, res) => {
-  const input = req.body;
+app.post("/ima/run", async (req, res) => {
+  const msg = req.body.message;
 
-  const start = Date.now();
+  const mem = loadMemory();
+  const decision = decide(msg, mem);
 
-  // סימולציה של עיבוד אמא
-  const output = {
-    result: "processed",
-    input
-  };
+  addMemory(mem, msg, "input");
 
-  const duration = Date.now() - start;
+  let actionResult = null;
 
-  usageLog.push({
-    input,
-    duration,
-    time: Date.now()
-  });
+  if (decision.actions.length > 0) {
+    actionResult = await dispatch(decision.actions[0], { message: msg });
+  }
 
-  res.json(output);
-});
-
-// טלמטריה פנימית
-app.get("/ima/metrics", (req, res) => {
-  const avg = usageLog.reduce((a,b)=>a+b.duration,0) / (usageLog.length || 1);
+  saveMemory(mem);
 
   res.json({
-    requests: usageLog.length,
-    avgResponse: avg
+    result: actionResult?.result || "IMA processed message",
+    debug: decision,
+    action: actionResult
   });
 });
 
 app.listen(4000, () => {
-  console.log("🌍 IMA WORLD API RUNNING ON 4000");
+  console.log("🌍 IMA CORE RUNNING ON 4000");
 });
