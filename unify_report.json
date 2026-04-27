@@ -1,0 +1,22 @@
+{
+  "cloned": [],
+  "failed": [
+    {
+      "repo": "IMA",
+      "error": "missing repo folder: IMA"
+    },
+    {
+      "repo": "HERCULES",
+      "error": "missing repo folder: HERCULES"
+    },
+    {
+      "repo": "BASE44",
+      "error": "missing repo folder: BASE44"
+    }
+  ],
+  "summary": {
+    "total": 3,
+    "ok": 0,
+    "failed": 3
+  }
+}

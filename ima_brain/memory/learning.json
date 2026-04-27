@@ -1,0 +1,18 @@
+{
+  "total_sources": 3,
+  "issues": [
+    {
+      "source": "IMA",
+      "issue": "empty or unscanned repo"
+    },
+    {
+      "source": "HERCULES",
+      "issue": "empty or unscanned repo"
+    },
+    {
+      "source": "BASE44",
+      "issue": "empty or unscanned repo"
+    }
+  ],
+  "patterns": []
+}

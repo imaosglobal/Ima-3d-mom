@@ -1,0 +1,26 @@
+{
+  "core": [],
+  "plugins": [
+    {
+      "name": "IMA",
+      "type": "plugin",
+      "disabled": true
+    },
+    {
+      "name": "HERCULES",
+      "type": "plugin",
+      "disabled": true
+    },
+    {
+      "name": "BASE44",
+      "type": "plugin",
+      "disabled": true
+    }
+  ],
+  "status": "BROKEN",
+  "issues": [
+    "Fix repo: IMA",
+    "Fix repo: HERCULES",
+    "Fix repo: BASE44"
+  ]
+}

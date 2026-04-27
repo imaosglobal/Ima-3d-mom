@@ -1,0 +1,17 @@
+{
+  "learned": [
+    {
+      "source": "IMA",
+      "status": "pending analysis"
+    },
+    {
+      "source": "HERCULES",
+      "status": "pending analysis"
+    },
+    {
+      "source": "BASE44",
+      "status": "pending analysis"
+    }
+  ],
+  "conflicts": []
+}
