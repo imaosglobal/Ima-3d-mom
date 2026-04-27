@@ -19,5 +19,5 @@ app.post("/ask", (req, res) => {
 app.get("/health", (req,res)=>{res.json({status:"alive",time:Date.now()});});
 
 app.listen(3000, () => {
-  console.log("🧠 IMA KERNEL RUNNING");
+  console.log("🧠 IMA KERNEL RUNNING | optimized " + Date.now());
 });
