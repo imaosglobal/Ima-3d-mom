@@ -12,6 +12,22 @@
       "hits": 1,
       "created": 1777192122401,
       "lastUsed": 1777192122401
+    },
+    {
+      "value": "change detected in repo",
+      "type": "sync_event",
+      "weight": 1,
+      "hits": 9,
+      "created": 1777302705557,
+      "lastUsed": 1777302745517
+    },
+    {
+      "value": "change detected",
+      "type": "sync_event",
+      "weight": 0.5,
+      "hits": 1,
+      "created": 1777302766929,
+      "lastUsed": 1777302766929
     }
   ]
 }
