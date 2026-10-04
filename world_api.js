@@ -10,7 +10,6 @@ app.post("/ima/run", async (req, res) => {
   const { message, userId } = req.body;
 
   const users = loadUsers();
-
   let user = getUser(users, userId);
 
   if (!user) {
@@ -18,7 +17,6 @@ app.post("/ima/run", async (req, res) => {
   }
 
   const decision = decide(message, user);
-
   let actionResult = null;
 
   if (decision.actions.length > 0) {
@@ -39,6 +37,4 @@ app.post("/ima/run", async (req, res) => {
   });
 });
 
-app.listen(4000, () => {
-  console.log("🌍 IMA MULTI-USER SYSTEM RUNNING ON 4000");
-});
+module.exports = app;
